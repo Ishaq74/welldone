@@ -1,0 +1,737 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+
+// Check if user is admin (middleware handles authentication)
+const user = Astro.locals?.user;
+if (!user || user.role !== 'admin') {
+  return Astro.redirect('/unauthorized');
+}
+---
+
+<BaseLayout title="Gestion des utilisateurs">
+  <div class="admin-users-container">
+    <div class="admin-header">
+      <h1>Gestion des utilisateurs</h1>
+      <div class="admin-actions">
+        <button id="refresh-btn" class="btn btn-secondary">
+          Actualiser
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="role-filter">Filtrer par rôle:</label>
+        <select id="role-filter">
+          <option value="">Tous les rôles</option>
+          <option value="admin">Admin</option>
+          <option value="user">Utilisateur</option>
+          <option value="member">Membre</option>
+          <option value="guest">Invité</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="banned-filter">Statut:</label>
+        <select id="banned-filter">
+          <option value="">Tous</option>
+          <option value="false">Actifs</option>
+          <option value="true">Bannis</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="search-input">Rechercher:</label>
+        <input type="text" id="search-input" placeholder="Nom ou email...">
+      </div>
+      
+      <button id="apply-filters" class="btn btn-primary">Appliquer</button>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-table-container">
+      <div id="loading" class="loading" style="display: none;">
+        Chargement...
+      </div>
+      
+      <div id="error-message" class="error-message" style="display: none;"></div>
+      
+      <table id="users-table" class="users-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Statut</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <!-- Will be populated by JavaScript -->
+        </tbody>
+      </table>
+      
+      <!-- Pagination -->
+      <div class="pagination" id="pagination" style="display: none;">
+        <button id="prev-page" class="btn btn-secondary" disabled>Précédent</button>
+        <span id="page-info">Page 1 sur 1</span>
+        <button id="next-page" class="btn btn-secondary" disabled>Suivant</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Action Modal -->
+  <div id="user-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Action sur l'utilisateur</h3>
+        <button id="close-modal" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div id="modal-content">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="cancel-action" class="btn btn-secondary">Annuler</button>
+        <button id="confirm-action" class="btn btn-danger">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .admin-users-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+  }
+
+  .admin-header h1 {
+    margin: 0;
+    color: #333;
+  }
+
+  .filters-container {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .filter-group label {
+    font-weight: bold;
+    color: #555;
+    font-size: 14px;
+  }
+
+  .filter-group select,
+  .filter-group input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .users-table-container {
+    position: relative;
+  }
+
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .users-table th {
+    background: #f8f9fa;
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .users-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+  }
+
+  .users-table tbody tr:hover {
+    background: #f8f9fa;
+  }
+
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .status-active {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .status-banned {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .role-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .role-admin {
+    background: #dc3545;
+    color: white;
+  }
+
+  .role-user {
+    background: #007bff;
+    color: white;
+  }
+
+  .role-member {
+    background: #28a745;
+    color: white;
+  }
+
+  .role-guest {
+    background: #6c757d;
+    color: white;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+  }
+
+  .btn-warning {
+    background: #ffc107;
+    color: #212529;
+  }
+
+  .btn-success {
+    background: #28a745;
+    color: white;
+  }
+
+  .btn:hover {
+    opacity: 0.8;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding: 20px 0;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: #6c757d;
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* Modal styles */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80%;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+  }
+
+  @media (max-width: 768px) {
+    .filters-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .users-table {
+      font-size: 14px;
+    }
+    
+    .users-table th,
+    .users-table td {
+      padding: 8px;
+    }
+    
+    .action-buttons {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+  // User management functionality
+  let currentPage = 1;
+  let pageSize = 20;
+  let totalPages = 1;
+  let currentFilters = {};
+
+  // DOM elements
+  const usersTable = document.getElementById('users-table');
+  const usersTbody = document.getElementById('users-tbody');
+  const loading = document.getElementById('loading');
+  const errorMessage = document.getElementById('error-message');
+  const pagination = document.getElementById('pagination');
+  const pageInfo = document.getElementById('page-info');
+  const prevPageBtn = document.getElementById('prev-page');
+  const nextPageBtn = document.getElementById('next-page');
+  
+  // Filter elements
+  const roleFilter = document.getElementById('role-filter');
+  const bannedFilter = document.getElementById('banned-filter');
+  const searchInput = document.getElementById('search-input');
+  const applyFiltersBtn = document.getElementById('apply-filters');
+  const refreshBtn = document.getElementById('refresh-btn');
+
+  // Modal elements
+  const userModal = document.getElementById('user-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalContent = document.getElementById('modal-content');
+  const closeModalBtn = document.getElementById('close-modal');
+  const cancelActionBtn = document.getElementById('cancel-action');
+  const confirmActionBtn = document.getElementById('confirm-action');
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+    setupEventListeners();
+  });
+
+  function setupEventListeners() {
+    applyFiltersBtn.addEventListener('click', handleFilters);
+    refreshBtn.addEventListener('click', () => loadUsers());
+    
+    // Pagination
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadUsers();
+      }
+    });
+    
+    nextPageBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadUsers();
+      }
+    });
+
+    // Modal
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelActionBtn.addEventListener('click', closeModal);
+    
+    // Enter key in search
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleFilters();
+      }
+    });
+  }
+
+  function handleFilters() {
+    currentFilters = {
+      role: roleFilter.value || null,
+      banned: bannedFilter.value ? bannedFilter.value === 'true' : null,
+      search: searchInput.value.trim() || null
+    };
+    currentPage = 1;
+    loadUsers();
+  }
+
+  async function loadUsers() {
+    showLoading(true);
+    hideError();
+
+    try {
+      const params = new URLSearchParams();
+      params.append('page', currentPage.toString());
+      params.append('pageSize', pageSize.toString());
+      
+      if (currentFilters.role) params.append('role', currentFilters.role);
+      if (currentFilters.banned !== null) params.append('banned', currentFilters.banned.toString());
+      if (currentFilters.search) params.append('search', currentFilters.search);
+
+      const response = await fetch(`/api/admin/users?${params.toString()}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du chargement des utilisateurs');
+      }
+
+      displayUsers(data.users);
+      updatePagination(data.totalPages, data.totalCount);
+      
+    } catch (error) {
+      console.error('Error loading users:', error);
+      showError(error.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function displayUsers(users) {
+    if (!users || users.length === 0) {
+      usersTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Aucun utilisateur trouvé</td></tr>';
+      return;
+    }
+
+    usersTbody.innerHTML = users.map(user => `
+      <tr>
+        <td>${escapeHtml(user.name || 'N/A')}</td>
+        <td>${escapeHtml(user.email)}</td>
+        <td><span class="role-badge role-${user.role || 'user'}">${user.role || 'user'}</span></td>
+        <td>
+          <span class="status-badge ${user.banned ? 'status-banned' : 'status-active'}">
+            ${user.banned ? 'Banni' : 'Actif'}
+          </span>
+          ${user.banned && user.banExpires ? `<br><small>Expire: ${formatDate(user.banExpires)}</small>` : ''}
+        </td>
+        <td>${formatDate(user.createdAt)}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-sm btn-warning" onclick="showChangeRoleModal('${user.id}', '${user.role || 'user'}')">Rôle</button>
+            ${user.banned 
+              ? `<button class="btn btn-sm btn-success" onclick="showUnbanModal('${user.id}', '${escapeHtml(user.name || user.email)}')">Débannir</button>`
+              : `<button class="btn btn-sm btn-danger" onclick="showBanModal('${user.id}', '${escapeHtml(user.name || user.email)}')">Bannir</button>`
+            }
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function updatePagination(totalPagesCount, totalCount) {
+    totalPages = totalPagesCount;
+    
+    if (totalPages <= 1) {
+      pagination.style.display = 'none';
+      return;
+    }
+    
+    pagination.style.display = 'flex';
+    pageInfo.textContent = `Page ${currentPage} sur ${totalPages} (${totalCount} utilisateurs)`;
+    
+    prevPageBtn.disabled = currentPage <= 1;
+    nextPageBtn.disabled = currentPage >= totalPages;
+  }
+
+  function showLoading(show) {
+    loading.style.display = show ? 'block' : 'none';
+    usersTable.style.opacity = show ? '0.5' : '1';
+  }
+
+  function hideError() {
+    errorMessage.style.display = 'none';
+  }
+
+  function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Modal functions (will be available globally)
+  window.showBanModal = function(userId, userName) {
+    modalTitle.textContent = 'Bannir l\'utilisateur';
+    modalContent.innerHTML = `
+      <p>Êtes-vous sûr de vouloir bannir <strong>${userName}</strong> ?</p>
+      <div style="margin: 15px 0;">
+        <label for="ban-reason" style="display: block; margin-bottom: 5px;">Raison du bannissement:</label>
+        <textarea id="ban-reason" placeholder="Expliquez la raison du bannissement..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
+      </div>
+      <div style="margin: 15px 0;">
+        <label for="ban-expires" style="display: block; margin-bottom: 5px;">Date d'expiration (optionnel):</label>
+        <input type="datetime-local" id="ban-expires" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+    `;
+    
+    confirmActionBtn.onclick = () => banUser(userId);
+    confirmActionBtn.textContent = 'Bannir';
+    confirmActionBtn.className = 'btn btn-danger';
+    
+    showModal();
+  };
+
+  window.showUnbanModal = function(userId, userName) {
+    modalTitle.textContent = 'Débannir l\'utilisateur';
+    modalContent.innerHTML = `
+      <p>Êtes-vous sûr de vouloir débannir <strong>${userName}</strong> ?</p>
+      <p>L'utilisateur pourra à nouveau se connecter et utiliser la plateforme.</p>
+    `;
+    
+    confirmActionBtn.onclick = () => unbanUser(userId);
+    confirmActionBtn.textContent = 'Débannir';
+    confirmActionBtn.className = 'btn btn-success';
+    
+    showModal();
+  };
+
+  window.showChangeRoleModal = function(userId, currentRole) {
+    modalTitle.textContent = 'Changer le rôle';
+    modalContent.innerHTML = `
+      <p>Choisir le nouveau rôle pour cet utilisateur:</p>
+      <div style="margin: 15px 0;">
+        <label for="new-role" style="display: block; margin-bottom: 5px;">Nouveau rôle:</label>
+        <select id="new-role" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="user" ${currentRole === 'user' ? 'selected' : ''}>Utilisateur</option>
+          <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Membre</option>
+          <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Admin</option>
+          <option value="guest" ${currentRole === 'guest' ? 'selected' : ''}>Invité</option>
+        </select>
+      </div>
+    `;
+    
+    confirmActionBtn.onclick = () => changeUserRole(userId);
+    confirmActionBtn.textContent = 'Changer le rôle';
+    confirmActionBtn.className = 'btn btn-warning';
+    
+    showModal();
+  };
+
+  function showModal() {
+    userModal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    userModal.style.display = 'none';
+  }
+
+  async function banUser(userId) {
+    const reason = document.getElementById('ban-reason').value.trim();
+    const expires = document.getElementById('ban-expires').value;
+    
+    if (!reason) {
+      alert('Veuillez saisir une raison pour le bannissement.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/users/ban', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          reason,
+          expires: expires || null
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du bannissement');
+      }
+
+      closeModal();
+      loadUsers();
+      
+    } catch (error) {
+      console.error('Error banning user:', error);
+      alert('Erreur: ' + error.message);
+    }
+  }
+
+  async function unbanUser(userId) {
+    try {
+      const response = await fetch('/api/admin/users/unban', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du débannissement');
+      }
+
+      closeModal();
+      loadUsers();
+      
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      alert('Erreur: ' + error.message);
+    }
+  }
+
+  async function changeUserRole(userId) {
+    const newRole = document.getElementById('new-role').value;
+    
+    try {
+      const response = await fetch('/api/admin/users/role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          role: newRole
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du changement de rôle');
+      }
+
+      closeModal();
+      loadUsers();
+      
+    } catch (error) {
+      console.error('Error changing user role:', error);
+      alert('Erreur: ' + error.message);
+    }
+  }
+</script>

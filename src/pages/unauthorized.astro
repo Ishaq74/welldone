@@ -1,0 +1,127 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Accès non autorisé">
+  <div class="error-container">
+    <div class="error-content">
+      <div class="error-icon">
+        🚫
+      </div>
+      
+      <h1>Accès non autorisé</h1>
+      
+      <p>
+        Vous n'avez pas les permissions nécessaires pour accéder à cette page.
+      </p>
+      
+      <div class="error-details">
+        <p>
+          Cette page est réservée aux utilisateurs ayant un rôle spécifique. 
+          Contactez un administrateur si vous pensez que c'est une erreur.
+        </p>
+      </div>
+      
+      <div class="error-actions">
+        <a href="/" class="btn btn-primary">
+          Retour à l'accueil
+        </a>
+        
+        <a href="/profil" class="btn btn-secondary">
+          Mon profil
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-container {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .error-content {
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  .error-icon {
+    font-size: 80px;
+    margin-bottom: 30px;
+  }
+
+  .error-content h1 {
+    color: #dc3545;
+    margin-bottom: 20px;
+    font-size: 32px;
+  }
+
+  .error-content > p {
+    color: #6c757d;
+    font-size: 18px;
+    margin-bottom: 30px;
+  }
+
+  .error-details {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .error-details p {
+    color: #495057;
+    margin: 0;
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  @media (max-width: 768px) {
+    .error-actions {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .btn {
+      width: 200px;
+    }
+  }
+</style>
