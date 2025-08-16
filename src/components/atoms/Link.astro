@@ -1,0 +1,148 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  tag?: 'a' | 'button';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  ariaLabel?: string;
+  text?: string;
+  icon?: {
+    name: string;
+    side?: 'left' | 'right';
+  };
+  shape?: 'sharp' | 'rounded' | 'circle';
+  shadow?: boolean;
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge' | 'inset' | 'outset';
+  textColor?: string;
+  backgroundColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  padding?: string;
+  margin?: string;
+  width?: string;
+  className?: string;
+  style?: string;
+  [key: string]: any;
+}
+
+const {
+  tag = 'a',
+  href,
+  type = 'button',
+  ariaLabel,
+  text,
+  icon,
+  shape = 'rounded',
+  shadow = false,
+  border = false,
+  borderColor = 'primary',
+  borderWidth = '1px',
+  borderStyle = 'solid',
+  textColor = 'primary',
+  backgroundColor,
+  textAlign = 'center',
+  padding = '0.5em 1em',
+  margin,
+  width,
+  className = '',
+  style: inlineStyle = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const Tag = tag;
+
+const designTokens = [
+  'primary', 'secondary', 'accent', 'background', 'text', 'border', 'hover', 'focus',
+  'warning', 'info', 'disabled', 'muted', 'surface', 'shadow', 'shadow-dark',
+  'error', 'success',
+  'primary-light', 'secondary-light', 'accent-light',
+  'primary-dark', 'secondary-dark', 'accent-dark', 'background-dark', 'text-dark',
+  'border-dark', 'hover-dark', 'surface-dark', 'muted-dark'
+];
+
+function isDesignToken(color: string) {
+  return designTokens.includes(color);
+}
+
+const cssTextColor = isDesignToken(textColor) ? `var(--color-${textColor})` : textColor;
+const cssBackgroundColor = backgroundColor ? (isDesignToken(backgroundColor) ? `var(--color-${backgroundColor})` : backgroundColor) : undefined;
+const cssBorderColor = isDesignToken(borderColor) ? `var(--color-${borderColor})` : borderColor;
+
+const classes = [
+  'link',
+  shape,
+  shadow ? 'shadow' : '',
+  border ? 'border' : '',
+  textAlign ? `text-${textAlign}` : '',
+  className,
+].filter(Boolean).join(' ');
+
+const style = [
+  `color: ${cssTextColor};`,
+  cssBackgroundColor ? `background-color: ${cssBackgroundColor};` : '',
+  border ? `border: ${borderWidth} ${borderStyle} ${cssBorderColor};` : '',
+  padding ? `padding: ${padding};` : '',
+  margin ? `margin: ${margin};` : '',
+  width ? `width: ${width};` : '',
+  inlineStyle,
+].filter(Boolean).join(' ');
+---
+
+<Tag
+  class={classes}
+  style={style}
+  href={tag === 'a' ? href : undefined}
+  type={tag === 'button' ? type : undefined}
+  aria-label={ariaLabel}
+  {...htmlAttributes}
+>
+  {icon?.side === 'left' && <Icon name={icon.name} />}
+  {text ? text : <slot />}
+  {icon?.side === 'right' && <Icon name={icon.name} />}
+</Tag>
+
+<style is:inline>
+  .link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+
+  .link:hover {
+    filter: brightness(1.05);
+  }
+
+  .link:active {
+    transform: scale(0.97);
+  }
+
+  .link.sharp {
+    border-radius: 0;
+  }
+
+  .link.rounded {
+    border-radius: 0.5rem;
+  }
+
+  .link.circle {
+    border-radius: 50rem;
+  }
+
+  .link.shadow {
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .link svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+</style>

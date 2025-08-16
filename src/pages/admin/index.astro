@@ -1,0 +1,13 @@
+---
+const user = Astro.locals?.user;
+---
+
+<h1>Admin Dashboard</h1>
+{user && user.role === "admin" ? (
+  <div>
+    <p>Bienvenue, admin {user.name ?? user.email} !</p>
+    <p>Gestion des utilisateurs et paramètres à venir...</p>
+  </div>
+) : (
+  <p>Accès réservé aux administrateurs.</p>
+)}

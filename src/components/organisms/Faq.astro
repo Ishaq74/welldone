@@ -1,0 +1,40 @@
+---
+import Details from '../atoms/Details.astro';
+
+interface FaqItem {
+  question: string;
+  answer: string;
+  open?: boolean;
+}
+
+interface Props {
+  faqs: FaqItem[];
+  className?: string;
+  style?: string;
+}
+
+const { faqs = [], className = '', style = '' } = Astro.props as Props;
+---
+
+<section class={className} style={style} role="list" aria-label="Foire aux questions">
+  {faqs.map((faq, i) => (
+    <Details
+      key={i}
+      open={faq.open ?? false}
+      summary={faq.question}
+      summaryFontWeight="700"
+      summaryFontSize="1.1rem"
+      border
+      borderColor="primary"
+      padding="1em"
+      margin="0.5em 0"
+      shape="rounded"
+      shadow
+      iconSummary={{ name: 'mdi:help-circle-outline', side: 'left', size: 20 }}
+      iconOpen={{ name: 'mdi:chevron-down', size: 20 }}
+      iconClose={{ name: 'mdi:chevron-right', size: 20 }}
+    >
+      {faq.answer}
+    </Details>
+  ))}
+</section>

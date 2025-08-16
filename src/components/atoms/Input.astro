@@ -1,0 +1,246 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface IconProps {
+  name: string;
+  size?: number;
+  side?: 'left' | 'right';
+  className?: string;
+}
+
+interface Props {
+  id?: string;
+  name?: string;
+  type?: 
+    | 'text' | 'email' | 'password' | 'number' | 'color' | 'date' | 'url' | 'textarea' | 'radio' | 'checkbox' | 'select' | 'file' | 'search';
+  label?: string;
+  placeholder?: string;
+  value?: string | number | boolean;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  minlength?: number;
+  maxlength?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  pattern?: string;
+  rows?: number;      // textarea only
+  cols?: number;      // textarea only
+  options?: { value: string; label: string }[]; // select only
+  iconLeft?: IconProps;
+  iconRight?: IconProps;
+  className?: string;
+  style?: string;
+  [key: string]: any;
+}
+
+const {
+  id,
+  name,
+  type = 'text',
+  label,
+  placeholder = '',
+  value = '',
+  required = false,
+  disabled = false,
+  readonly = false,
+  minlength,
+  maxlength,
+  min,
+  max,
+  step,
+  pattern,
+  rows = 4,
+  cols = 40,
+  options = [],
+  iconLeft,
+  iconRight,
+  className = '',
+  style: inlineStyle = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const baseClass = 'input-wrapper';
+const classes = [baseClass, className].filter(Boolean).join(' ');
+const styleAttr = [inlineStyle].filter(Boolean).join(' ');
+---
+
+<div class={classes} style={styleAttr}>
+  {label && <label for={id} class="input-label">{label}{required ? '*' : ''}</label>}
+
+  {type === 'textarea' ? (
+    <>
+      {iconLeft && (
+        <span class={`icon-left icon ${iconLeft.className || ''}`} aria-hidden="true" style={`font-size: ${iconLeft.size ?? 16}px;`}>
+          <Icon name={iconLeft.name} />
+        </span>
+      )}
+      <textarea
+        id={id}
+        name={name}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        readonly={readonly}
+        minlength={minlength}
+        maxlength={maxlength}
+        rows={rows}
+        cols={cols}
+        {...htmlAttributes}
+        >{value}</textarea>
+      {iconRight && (
+        <span class={`icon-right icon ${iconRight.className || ''}`} aria-hidden="true" style={`font-size: ${iconRight.size ?? 16}px;`}>
+          <Icon name={iconRight.name} />
+        </span>
+      )}
+    </>
+  ) : type === 'select' ? (
+    <>
+      {iconLeft && (
+        <span class={`icon-left icon ${iconLeft.className || ''}`} aria-hidden="true" style={`font-size: ${iconLeft.size ?? 16}px;`}>
+          <Icon name={iconLeft.name} />
+        </span>
+      )}
+      <select
+        id={id}
+        name={name}
+        required={required}
+        disabled={disabled}
+        {...htmlAttributes}
+      >
+        {options.length === 0 && <option value="">-- Aucun choix --</option>}
+        {options.map(option => (
+          <option value={option.value} selected={value === option.value}>{option.label}</option>
+        ))}
+      </select>
+      {iconRight && (
+        <span class={`icon-right icon ${iconRight.className || ''}`} aria-hidden="true" style={`font-size: ${iconRight.size ?? 16}px;`}>
+          <Icon name={iconRight.name} />
+        </span>
+      )}
+    </>
+  ) : type === 'radio' || type === 'checkbox' ? (
+    <input
+      id={id}
+      name={name}
+      type={type}
+      value={value as string}
+      required={required}
+      disabled={disabled}
+      readonly={readonly}
+      {...htmlAttributes}
+      checked={!!value}
+    />
+  ) : (
+    <>
+      {iconLeft && (
+        <span class={`icon-left icon ${iconLeft.className || ''}`} aria-hidden="true" style={`font-size: ${iconLeft.size ?? 16}px;`}>
+          <Icon name={iconLeft.name} />
+        </span>
+      )}
+      <input
+        id={id}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        value={value as string | number}
+        required={required}
+        disabled={disabled}
+        readonly={readonly}
+        minlength={minlength}
+        maxlength={maxlength}
+        min={min}
+        max={max}
+        step={step}
+        pattern={pattern}
+        {...htmlAttributes}
+      />
+      {iconRight && (
+        <span class={`icon-right icon ${iconRight.className || ''}`} aria-hidden="true" style={`font-size: ${iconRight.size ?? 16}px;`}>
+          <Icon name={iconRight.name} />
+        </span>
+      )}
+    </>
+  )}
+</div>
+
+<style is:inline>
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.2em;
+  }
+
+  .input-label {
+    margin-bottom: 0.3em;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  input,
+  select,
+  textarea {
+    font-family: system-ui, sans-serif;
+    font-size: 1rem;
+    padding: 0.5em 0.75em;
+    border: 2px solid hsl(203, 30%, 26%);
+    border-radius: 4px;
+    outline-offset: 2px;
+    transition: outline-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  input:not(:placeholder-shown):valid,
+  textarea:not(:placeholder-shown):valid,
+  select:valid {
+    border-color: var(--color-success, #28a745);
+  }
+
+  input:not(:placeholder-shown):invalid,
+  textarea:not(:placeholder-shown):invalid,
+  select:invalid {
+    border-color: var(--color-error, #dc3545);
+  }
+
+  input:focus:invalid,
+  textarea:focus:invalid,
+  select:focus:invalid {
+    border-color: var(--color-warning, #ffc107);
+    outline-color: var(--color-warning, #ffc107);
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: 3px solid hsl(203, 30%, 26%);
+  }
+
+  .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: hsl(203, 30%, 26%);
+  }
+
+  .icon-left {
+    left: 0.5em;
+  }
+
+  .icon-right {
+    right: 0.5em;
+  }
+
+  input.icon-left,
+  textarea.icon-left,
+  select.icon-left {
+    padding-left: 2em;
+  }
+
+  input.icon-right,
+  textarea.icon-right,
+  select.icon-right {
+    padding-right: 2em;
+  }
+</style>

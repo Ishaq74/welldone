@@ -1,0 +1,159 @@
+---
+// Fichier : src/components/molecules/CounterUp.astro
+// Ce composant anime un chiffre de 0 jusqu'à une valeur cible
+// lorsque l'élément devient visible à l'écran.
+
+// 1. Définition des Props
+type Preset = 'primary' | 'secondary' | 'accent';
+
+interface Props {
+  // La valeur numérique finale à atteindre.
+  endValue: number;
+  
+  // Le libellé affiché sous le chiffre.
+  label: string;
+  
+  // Un préfixe optionnel avant le chiffre (ex: "+").
+  prefix?: string;
+  
+  // Un suffixe optionnel après le chiffre (ex: "%" ou "€").
+  suffix?: string;
+  
+  // La durée de l'animation en secondes.
+  duration?: number;
+  
+  // Un preset de couleur pour le chiffre.
+  preset?: Preset;
+}
+
+// 2. Assignation des props avec des valeurs par défaut
+const { 
+  endValue, 
+  label, 
+  prefix = '', 
+  suffix = '', 
+  duration = 2,
+  preset 
+} = Astro.props;
+
+// 3. Logique de style
+// Applique une classe CSS si un preset est fourni.
+// Si aucun preset n'est donné, aucune classe de preset n'est ajoutée.
+const presetClass = preset ? `preset-${preset}` : '';
+---
+
+<!-- 4. Structure HTML du composant -->
+<div class:list={["counter-up-wrapper", presetClass]}>
+  <div class="value-container">
+    <span class="prefix">{prefix}</span>
+    <span 
+      class="value" 
+      data-target={endValue} 
+      data-duration={duration * 1000}
+    >
+      0 <!-- Valeur de départ -->
+    </span>
+    <span class="suffix">{suffix}</span>
+  </div>
+  <div class="label">{label}</div>
+</div>
+
+<!-- 5. Script côté client -->
+<script>
+  // Ce script s'exécute une seule fois sur la page, même s'il y a plusieurs compteurs.
+  // Il est autonome et ne dépend que des data-attributes sur les éléments HTML.
+  
+  // Sélectionne tous les éléments qui doivent être animés
+  const counters = document.querySelectorAll('.counter-up-wrapper .value');
+
+  // Crée un 'observateur' qui surveille quand les éléments entrent dans la zone visible.
+  const observer = new IntersectionObserver((entries) => {
+    // Pour chaque élément observé...
+    entries.forEach(entry => {
+      // S'il est maintenant visible...
+      if (entry.isIntersecting) {
+        const element = entry.target as HTMLElement;
+        // ... on lance l'animation
+        animateCounter(element);
+        // ... et on arrête de l'observer pour ne pas relancer l'animation inutilement.
+        observer.unobserve(element);
+      }
+    });
+  }, { 
+    threshold: 0.5 // Se déclenche quand 50% de l'élément est visible
+  });
+
+  // La fonction qui gère l'animation du chiffre
+  function animateCounter(element: HTMLElement) {
+    const target = +element.dataset.target!; // Le '!' indique que la valeur existera toujours
+    const duration = +element.dataset.duration!;
+    
+    let startTimestamp: number | null = null;
+    
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const currentValue = Math.floor(progress * target);
+      
+      // Affiche la valeur actuelle, formatée avec des séparateurs de milliers
+      element.innerText = currentValue.toLocaleString();
+      
+      // Si l'animation n'est pas terminée, on demande la prochaine frame
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    
+    // Lance la première étape de l'animation
+    window.requestAnimationFrame(step);
+  }
+
+  // Demande à l'observateur de surveiller chaque compteur trouvé sur la page.
+  counters.forEach(counter => {
+    if (counter) {
+      observer.observe(counter);
+    }
+  });
+</script>
+
+<!-- 6. Styles du composant -->
+<style>
+  .counter-up-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    color: var(--color-text, #333);
+  }
+
+  .value-container {
+    font-size: 3rem;
+    font-weight: bold;
+    line-height: 1;
+    color: var(--color-text-dark, #000); /* Couleur par défaut */
+  }
+
+  .label {
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    color: var(--color-muted-dark, #6c757d);
+  }
+  
+  .prefix, .suffix {
+    margin: 0 0.25rem;
+  }
+
+  /* STYLES DES PRESETS */
+  .preset-primary .value-container {
+    color: var(--color-primary, blue);
+  }
+  .preset-secondary .value-container {
+    color: var(--color-secondary, grey);
+  }
+  .preset-accent .value-container {
+    color: var(--color-accent, red);
+  }
+</style>

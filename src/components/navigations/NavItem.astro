@@ -1,0 +1,145 @@
+---
+import Text from "@atoms/Text.astro";
+import Icon from "node_modules/astro-icon/components/Icon.astro";
+import Link from "@atoms/Link.astro";
+
+export interface Props {
+  name: string;
+  url?: string;
+  icon?: string;
+  dropdown?: boolean;
+  children?: {
+    name: string;
+    url: string;
+    icon?: string;
+  }[];
+  mode?: "desktop" | "mobile";
+}
+
+const {
+  name,
+  url = "#",
+  icon,
+  dropdown = false,
+  children = [],
+  mode = "desktop"
+} = Astro.props;
+---
+
+{mode === "desktop" ? (
+  <li class="nav-item" role="none">
+    {dropdown && children.length > 0 ? (
+      <div class="dropdown-wrapper" role="presentation">
+        <button class="dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button">
+          {icon && <Icon name={icon} size={18} />}
+          <Text tag="span">{name}</Text>
+          <Icon name="mdi:chevron-down" size={16} />
+        </button>
+        <ul class="dropdown-menu" role="menu" aria-label={name}>
+          {children.map(child => (
+            <li role="none">
+              <Link href={child.url} role="menuitem" tabindex="-1">
+                {child.icon && <Icon name={child.icon} size={16} />} {child.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : (
+      <Link href={url} class="nav-link" role="menuitem">{icon && <Icon name={icon} size={18} />}{name}</Link>
+    )}
+  </li>
+) : (
+  <li role="none">
+    {dropdown && children.length > 0 ? (
+      <details>
+        <summary>
+          {icon && <Icon name={icon} size={18} />} {name}
+        </summary>
+        <ul>
+          {children.map(child => (
+            <li>
+              <Link href={child.url}>
+                {child.icon && <Icon name={child.icon} size={16} />} {child.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </details>
+    ) : (
+      <Link href={url}>
+        {icon && <Icon name={icon} size={18} />}
+        {name}
+      </Link>
+    )}
+  </li>
+)}
+
+<style is:inline>
+  .nav-item {
+    position: relative;
+  }
+
+  .dropdown-wrapper {
+    position: relative;
+  }
+
+  .dropdown-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font: inherit;
+    padding: 0;
+  }
+
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 0.5rem 0;
+    min-width: 180px;
+    z-index: 100;
+  }
+
+  .dropdown-wrapper:hover .dropdown-menu,
+  .dropdown-wrapper:focus-within .dropdown-menu {
+    display: block;
+  }
+
+  .dropdown-menu li a {
+    display: block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: #333;
+  }
+
+  .dropdown-menu li a:hover {
+    background-color: #f5f5f5;
+  }
+
+  details > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details ul {
+    list-style: none;
+    padding-left: 1rem;
+    margin: 0.25rem 0 0 0;
+  }
+</style>

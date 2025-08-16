@@ -1,0 +1,25 @@
+---
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import Link from "@atoms/Link.astro";
+
+const { entry } = Astro.props;
+if (!entry || !entry.data) return null;
+
+const { title, slug, description, image } = entry.data;
+---
+
+<article style="border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: white; display: flex; flex-direction: column; height: 100%;">
+  <Link href={`/post-categories/${slug}/`}>
+    <img src={image || "/images/fallback.jpg"} alt={title} width="100%" height="auto" style="object-fit: cover; display: block;" />
+  </Link>
+
+  <Wrapper padding="1rem">
+    <Link href={`/post-categories/${slug}/`} style="text-decoration: none;">
+      <Text tag="h3" fontSize="1.1rem" fontWeight="bold" style="margin-bottom: 0.5rem;">{title}</Text>
+    </Link>
+    {description && (
+      <Text tag="p" fontSize="0.95rem" color="gray">{description}</Text>
+    )}
+  </Wrapper>
+</article>

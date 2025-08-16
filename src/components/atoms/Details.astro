@@ -1,0 +1,244 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  open?: boolean;
+  summary?: string;
+  iconSummary?: {
+    name: string;
+    side?: 'left' | 'right';
+    size?: number;
+  };
+  iconOpen?: {
+    name: string;
+    size?: number;
+  };
+  iconClose?: {
+    name: string;
+    size?: number;
+  };
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge' | 'inset' | 'outset';
+  shadow?: boolean;
+  shape?: 'sharp' | 'rounded' | 'circle';
+  padding?: string;
+  margin?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  summaryTextColor?: string;
+  summaryFontWeight?: string | number;
+  summaryFontSize?: string;
+  summaryTextAlign?: 'left' | 'center' | 'right';
+  animationDuration?: string;
+  animationTimingFunction?: string;
+  className?: string;
+  style?: string;
+  [key: string]: any;
+}
+
+const {
+  open = false,
+  summary = '',
+  iconSummary,
+  iconOpen = { name: 'mdi:chevron-down', size: 20 },
+  iconClose = { name: 'mdi:chevron-right', size: 20 },
+  border = false,
+  borderColor = 'border',
+  borderWidth = '1px',
+  borderStyle = 'solid',
+  shadow = false,
+  shape = 'rounded',
+  padding = '1em',
+  margin,
+  backgroundColor,
+  textColor = 'text',
+  summaryTextColor,
+  summaryFontWeight = '600',
+  summaryFontSize = '1rem',
+  summaryTextAlign = 'left',
+  animationDuration = '0.3s',
+  animationTimingFunction = 'ease',
+  className = '',
+  style: inlineStyle = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const designTokens = [
+  'primary', 'secondary', 'accent', 'background', 'text', 'border', 'hover', 'focus',
+  'warning', 'info', 'disabled', 'muted', 'surface', 'shadow', 'shadow-dark',
+  'error', 'success',
+  'primary-light', 'secondary-light', 'accent-light',
+  'primary-dark', 'secondary-dark', 'accent-dark', 'background-dark', 'text-dark',
+  'border-dark', 'hover-dark', 'surface-dark', 'muted-dark'
+];
+
+function token(val: string | undefined) {
+  return val && designTokens.includes(val) ? `var(--color-${val})` : val;
+}
+
+const cssTextColor = token(textColor);
+const cssBackgroundColor = token(backgroundColor);
+const cssBorderColor = token(borderColor);
+const cssSummaryTextColor = summaryTextColor ? token(summaryTextColor) : cssTextColor;
+
+const wrapperClass = [
+  'details-wrapper',
+  shape,
+  shadow ? 'shadow' : '',
+  border ? 'border' : '',
+  className
+].filter(Boolean).join(' ');
+
+const wrapperStyle = [
+  cssTextColor ? `color: ${cssTextColor};` : '',
+  cssBackgroundColor ? `background-color: ${cssBackgroundColor};` : '',
+  border ? `border: ${borderWidth} ${borderStyle} ${cssBorderColor};` : '',
+  padding ? `padding: ${padding};` : '',
+  margin ? `margin: ${margin};` : '',
+  inlineStyle
+].filter(Boolean).join(' ');
+---
+
+<details class={wrapperClass} style={wrapperStyle} open={open} {...htmlAttributes}>
+  <summary
+    class="details-summary"
+    style={`
+      color: ${cssSummaryTextColor};
+      font-weight: ${summaryFontWeight};
+      font-size: ${summaryFontSize};
+      text-align: ${summaryTextAlign};
+    `}
+  >
+    {iconSummary && iconSummary.side === 'left' && <Icon name={iconSummary.name} size={iconSummary.size ?? 18} />}
+    <span class="summary-text">{summary}</span>
+    {iconSummary && iconSummary.side === 'right' && <Icon name={iconSummary.name} size={iconSummary.size ?? 18} />}
+    <span class="toggle-icon">
+      <Icon name={iconOpen.name} size={iconOpen.size ?? 20} class="icon-open" />
+      <Icon name={iconClose.name} size={iconClose.size ?? 20} class="icon-close" />
+    </span>
+  </summary>
+
+  <div class="details-content">
+    <slot />
+  </div>
+</details>
+
+<style is:inline>
+  details.details-wrapper {
+    transition: box-shadow 0.3s ease;
+  }
+
+  details.details-wrapper.rounded {
+    border-radius: 0.5rem;
+  }
+  details.details-wrapper.sharp {
+    border-radius: 0;
+  }
+  details.details-wrapper.circle {
+    border-radius: 50rem;
+  }
+
+  details.details-wrapper.shadow {
+    box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+  }
+
+  details.details-wrapper.border {
+    border-style: solid;
+  }
+
+  summary.details-summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    gap: 0.5em;
+  }
+
+  summary.details-summary:focus {
+    outline: 2px solid var(--color-focus, #2684ff);
+    outline-offset: 2px;
+  }
+
+  summary.details-summary > .summary-text {
+    flex: 1;
+  }
+
+  summary.details-summary > .toggle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 1.25em;
+    height: 1.25em;
+  }
+
+  /* Toggle icon initial state: close icon visible, open icon hidden */
+  summary.details-summary[aria-expanded="false"] > .toggle-icon > .icon-open {
+    display: none;
+  }
+  summary.details-summary[aria-expanded="false"] > .toggle-icon > .icon-close {
+    display: inline;
+  }
+
+  /* Toggle icon open state: open icon visible, close icon hidden */
+  details[open] summary.details-summary > .toggle-icon > .icon-open {
+    display: inline;
+  }
+  details[open] summary.details-summary > .toggle-icon > .icon-close {
+    display: none;
+  }
+
+  /* Content styles */
+  .details-content {
+    margin-top: 0.5em;
+    animation-name: slideDown;
+    animation-fill-mode: forwards;
+    animation-duration: var(--animation-duration, 0.3s);
+    animation-timing-function: var(--animation-timing-function, ease);
+    overflow: hidden;
+  }
+
+  details:not([open]) > .details-content {
+    animation-name: slideUp;
+    animation-fill-mode: forwards;
+    animation-duration: var(--animation-duration, 0.3s);
+    animation-timing-function: var(--animation-timing-function, ease);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  @keyframes slideDown {
+    0% {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    100% {
+      max-height: 100vh;
+      opacity: 1;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+    }
+  }
+
+  @keyframes slideUp {
+    0% {
+      max-height: 100vh;
+      opacity: 1;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+    }
+    100% {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+</style>

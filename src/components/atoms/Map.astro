@@ -1,0 +1,108 @@
+---
+// Définition des types pour les props
+type MapPreset = 'primary' | 'secondary' | 'accent';
+type MapLayer = 'mapnik' | 'cyclemap' | 'transportmap' | 'hot';
+
+interface Props {
+  org: Organization | null | undefined;
+  preset?: MapPreset;
+  zoom?: number; // Zoom level (1-19)
+  layer?: MapLayer; // Type de carte
+  showMarker?: boolean; // Afficher le marqueur rouge
+}
+
+// 1. DÉFINITION DES PROPS AVEC VALEURS PAR DÉFAUT
+const { 
+  org,
+  preset, // Pas de valeur par défaut pour le preset, on le gère plus bas
+  zoom = 15,
+  layer = 'mapnik',
+  showMarker = true
+} = Astro.props;
+
+// 2. LOGIQUE DE L'URL (inchangée)
+let embedUrl: string | undefined;
+if (org && org.geo && typeof org.geo === 'object' && 'latitude' in org.geo && 'longitude' in org.geo) {
+  const lat = org.geo.latitude;
+  const lon = org.geo.longitude;
+
+  // Calcul dynamique de la "bounding box" basé sur le niveau de zoom
+  // Un zoom plus élevé signifie une boîte plus petite.
+  const lat_range = 180 / Math.pow(2, zoom);
+  const lon_range = 360 / Math.pow(2, zoom);
+
+  const bbox_lon_min = lon - (lon_range / 2);
+  const bbox_lon_max = lon + (lon_range / 2);
+  const bbox_lat_min = lat - (lat_range / 2);
+  const bbox_lat_max = lat + (lat_range / 2);
+  
+  const bbox = `${bbox_lon_min},${bbox_lat_min},${bbox_lon_max},${bbox_lat_max}`;
+
+  // Construction de l'URL avec toutes les options
+  let url = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=${layer}`;
+  if (showMarker) {
+    url += `&marker=${lat},${lon}`;
+  }
+  embedUrl = url;
+}
+
+// 3. LOGIQUE DES PRESETS DE STYLE
+// On applique une classe CSS basée sur le preset fourni.
+// Si aucun preset n'est fourni, la classe sera vide (style par défaut).
+const presetClass = preset ? `map-preset-${preset}` : '';
+---
+
+{embedUrl ? (
+  <iframe
+    class:list={["map-iframe", presetClass]}
+    width="100%"
+    height="100%"
+    frameborder="0"
+    scrolling="no"
+    marginheight="0"
+    marginwidth="0"
+    src={embedUrl}
+    title={`Carte OpenStreetMap montrant la localisation de ${org?.name ?? 'notre entreprise'}`}
+  >
+  </iframe>
+) : (
+  <div class="map-error-placeholder">
+    <p>La carte ne peut être affichée.</p>
+    <p>(Coordonnées GPS manquantes dans les données)</p>
+  </div>
+)}
+
+<style>
+  /* Style par défaut pour l'iframe */
+  .map-iframe {
+    border: 1px solid var(--color-border, #ccc); /* Bordure par défaut */
+  }
+
+  /* PRESETS DE STYLE */
+  .map-preset-primary {
+    border: 2px solid var(--color-primary, blue);
+    box-shadow: 0 0 10px var(--color-primary, blue);
+  }
+  .map-preset-secondary {
+    border: 2px dashed var(--color-secondary, grey);
+  }
+  .map-preset-accent {
+    border: 3px solid var(--color-accent, red);
+    filter: grayscale(80%) sepia(20%);
+  }
+
+  /* Style pour le message d'erreur (inchangé) */
+  .map-error-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: inherit;
+    text-align: center;
+  }
+</style>

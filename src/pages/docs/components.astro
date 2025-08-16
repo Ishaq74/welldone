@@ -1,0 +1,909 @@
+---
+import { AstroFont } from "astro-font";
+import Layout from "@layouts/BaseLayout.astro";
+import Text from "@atoms/Text.astro";
+import Section from "@atoms/Section.astro";
+import Link from "@atoms/Link.astro";
+import Button from "@atoms/Button.astro";
+import List from "@atoms/List.astro";
+import Details from "@atoms/Details.astro";
+import Table from "@atoms/Table.astro";
+import Input from "@atoms/Input.astro";
+import Form from "@organisms/Form.astro";
+import Faq from "@organisms/Faq.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import { Image } from "astro:assets";
+import Slider from "@molecules/Slider.astro";
+import Carousel from "@molecules/Carousel.astro";
+import Gallery from "@molecules/Gallery.astro";
+
+// Fonction de soumission de formulaire pour la démo
+function handleSubmit(event: Event) {
+  event.preventDefault();
+  const form = event.target as HTMLFormElement;
+  const data = new FormData(form);
+  const values = Object.fromEntries(data.entries());
+  alert(`Données envoyées : ${JSON.stringify(values, null, 2)}`);
+}
+
+// Données pour les galeries
+const galleryImages = [
+  { src: "https://picsum.photos/400/300?random=1", alt: "Image 1", caption: "Beautiful landscape" },
+  { src: "https://picsum.photos/400/300?random=2", alt: "Image 2", caption: "City skyline" },
+  { src: "https://picsum.photos/400/300?random=3", alt: "Image 3", caption: "Nature scene" },
+  { src: "https://picsum.photos/400/300?random=4", alt: "Image 4", caption: "Architecture" },
+  { src: "https://picsum.photos/400/300?random=5", alt: "Image 5", caption: "Abstract art" },
+  { src: "https://picsum.photos/400/300?random=6", alt: "Image 6", caption: "Portrait" }
+];
+
+const productImages = [
+  {
+    src: "https://picsum.photos/600/400?random=10",
+    alt: "Product main view",
+    caption: "Main product view",
+    thumb: "https://picsum.photos/100/100?random=10"
+  },
+  {
+    src: "https://picsum.photos/600/400?random=11",
+    alt: "Product side view",
+    caption: "Side view",
+    thumb: "https://picsum.photos/100/100?random=11"
+  },
+  {
+    src: "https://picsum.photos/600/400?random=12",
+    alt: "Product detail",
+    caption: "Detail view",
+    thumb: "https://picsum.photos/100/100?random=12"
+  },
+  {
+    src: "https://picsum.photos/600/400?random=13",
+    alt: "Product back view",
+    caption: "Back view",
+    thumb: "https://picsum.photos/100/100?random=13"
+  }
+];
+---
+
+<Layout title="Design System Complet" description="Une démonstration exhaustive de nos composants, presets et tokens de design.">
+<!-- Hero Section: Présentation générale du Design System -->
+<Section id="hero" tag="header" preset="primary" display="flex" minHeight="60vh" justifyContent="center" alignItems="center">
+  <Wrapper cols={1} display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap="2rem">
+    <Text tag="h1">
+      Design System Ultra-Performant
+    </Text>
+    <Text tag="p">
+      Explorez notre bibliothèque de composants réutilisables, conçus pour l'efficacité et la cohérence visuelle.
+    </Text>
+    <Wrapper display="flex" gap="1rem" flexWrap="wrap" justifyContent="center">
+      <Button preset="accent" text="Découvrir les Composants" />
+      <Button preset="secondary" text="Accéder à la Documentation" border />
+    </Wrapper>
+  </Wrapper>
+</Section>
+
+<!-- Section 1: Presets et Structure (Section & Wrapper) -->
+<Section id="presets-structure" preset="default" tag="section">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2">
+      Presets et Structure : Section & Wrapper
+    </Text>
+    <Text tag="p">
+      Découvrez comment les presets transforment l'apparence de vos sections et wrappers, ainsi que leur agencement de base.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <Wrapper preset="primary">
+      <Text tag="h3">Wrapper Primary</Text>
+      <Text tag="p">Le preset "primary" pour des blocs de contenu importants.</Text>
+    </Wrapper>
+
+    <Wrapper preset="secondary">
+      <Text tag="h3">Wrapper Secondary</Text>
+      <Text tag="p">Le preset "secondary" pour des informations complémentaires ou des cartes.</Text>
+    </Wrapper>
+
+    <Wrapper preset="accent">
+      <Text tag="h3">Wrapper Accent</Text>
+      <Text tag="p">Le preset "accent" pour attirer l'attention sur des éléments clés.</Text>
+    </Wrapper>
+
+    <Wrapper preset="default" border>
+      <Text tag="h3">Wrapper Default</Text>
+      <Text tag="p">Le preset par défaut, souvent transparent, avec une bordure optionnelle ici.</Text>
+    </Wrapper>
+  </Wrapper>
+</Section>
+
+<!-- Section 2: Tokens de Design (Couleurs & Typographie) -->
+<Section id="design-tokens" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:palette-swatch">
+      Tokens de Design : Couleurs & Typographie
+    </Text>
+    <Text tag="p">
+      Les fondations visuelles de notre Design System pour une cohérence absolue.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <!-- Palette de Couleurs -->
+    <Section id="color-palette" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:palette">
+        1. La Palette de Couleurs
+      </Text>
+      <Text tag="p">
+        Chaque couleur est définie par une variable CSS pour une gestion centralisée.
+      </Text>
+      <Wrapper cols={4} gap="0.5rem" display="grid">
+        <Section tag="div" backgroundColor="primary" textColor="text-dark">Primary</Section>
+        <Section tag="div" backgroundColor="secondary" textColor="text-dark">Secondary</Section>
+        <Section tag="div" backgroundColor="accent" textColor="text-dark">Accent</Section>
+        <Section tag="div" backgroundColor="background" textColor="text">Background</Section>
+        <Section tag="div" backgroundColor="text" textColor="background">Text</Section>
+        <Section tag="div" backgroundColor="border" textColor="text">Border</Section>
+        <Section tag="div" backgroundColor="hover" textColor="text">Hover</Section>
+        <Section tag="div" backgroundColor="focus" textColor="text-dark">Focus</Section>
+        <Section tag="div" backgroundColor="warning" textColor="text-dark">Warning</Section>
+        <Section tag="div" backgroundColor="info" textColor="text-dark">Info</Section>
+        <Section tag="div" backgroundColor="disabled" textColor="text-dark">Disabled</Section>
+        <Section tag="div" backgroundColor="muted" textColor="text-dark">Muted</Section>
+        <Section tag="div" backgroundColor="surface" textColor="text" border>Surface</Section>
+        <Section tag="div" backgroundColor="error" textColor="text-dark">Error</Section>
+        <Section tag="div" backgroundColor="success" textColor="text-dark">Success</Section>
+        <Section tag="div" backgroundColor="primary-light" textColor="text">Primary Light</Section>
+        <Section tag="div" backgroundColor="secondary-light" textColor="text">Secondary Light</Section>
+        <Section tag="div" backgroundColor="accent-light" textColor="text-dark">Accent Light</Section>
+        <Section tag="div" backgroundColor="primary-dark" textColor="text-dark">Primary Dark</Section>
+        <Section tag="div" backgroundColor="secondary-dark" textColor="text-dark">Secondary Dark</Section>
+        <Section tag="div" backgroundColor="accent-dark" textColor="text-dark">Accent Dark</Section>
+        <Section tag="div" backgroundColor="background-dark" textColor="text-dark">Background Dark</Section>
+        <Section tag="div" backgroundColor="text-dark" textColor="background">Text Dark</Section>
+        <Section tag="div" backgroundColor="border-dark" textColor="text-dark">Border Dark</Section>
+        <Section tag="div" backgroundColor="hover-dark" textColor="text-dark">Hover Dark</Section>
+        <Section tag="div" backgroundColor="surface-dark" textColor="text-dark">Surface Dark</Section>
+        <Section tag="div" backgroundColor="muted-dark" textColor="text-dark">Muted Dark</Section>
+      </Wrapper>
+    </Section>
+
+    <!-- Typographie -->
+    <Section id="typography-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:format-font">
+        2. La Typographie
+      </Text>
+      <Text tag="p">
+        Polices et échelles de texte pour une lisibilité et une hiérarchie visuelle optimale.
+      </Text>
+      <Wrapper cols={2} gap="1rem" display="grid">
+        <Text tag="p" fontFamily="Bowlby One SC" backgroundColor="secondary-light" border>
+          Bowlby One SC
+        </Text>
+        <Text tag="p" fontFamily="base" backgroundColor="secondary-light" border>
+          Palanquin Dark
+        </Text>
+      </Wrapper>
+
+      <Text tag="h3" iconLeft="mdi:format-size">
+        Tailles des Textes (via les tags HTML)
+      </Text>
+      <Text tag="h1" iconLeft="mdi:format-header-1">Titre h1</Text>
+      <Text tag="h2" iconLeft="mdi:format-header-2">Titre h2</Text>
+      <Text tag="h3" iconLeft="mdi:format-header-3">Titre h3</Text>
+      <Text tag="h4" iconLeft="mdi:format-header-4">Titre h4</Text>
+      <Text tag="h5" iconLeft="mdi:format-header-5">Titre h5</Text>
+      <Text tag="h6" iconLeft="mdi:format-header-6">Titre h6</Text>
+
+      <Text tag="p">Ceci est un paragraphe simple. <strong>Texte gras</strong>, <em>italique</em>, <u>souligné</u>, <s>barré</s>, <mark>surligné</mark>.</Text>
+      <Text tag="p"><small>Texte petit (small)</small> et <abbr title="HyperText Markup Language">HTML</abbr> avec abréviations. Texte normal, <mark>texte surligné</mark>, liens <a href="#">hyperliens</a>.</Text>
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 3: Liens & Boutons -->
+<Section id="links-buttons" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:link-box">
+      Liens & Boutons
+    </Text>
+    <Text tag="p">
+      Éléments interactifs pour la navigation et les actions utilisateur, avec presets et options variées.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <!-- Liens -->
+    <Section id="links-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:link">
+        Les Liens
+      </Text>
+      <Wrapper cols={2} gap="1rem" display="grid">
+        <Link href="#" ariaLabel="Lien simple externe" text="Lien simple externe" icon={{ name: 'mdi:open-in-new', side: 'right' }} />
+        <Link href="#" ariaLabel="Bouton lien vers contact" text="Bouton style" style="button" background="secondary" border shadow shape="rounded" icon={{ name: 'mdi:email', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien icône gauche" text="Lien icône gauche" icon={{ name: 'mdi:file-document-outline', side: 'left' }} />
+        <Link href="#" ariaLabel="Bouton s'inscrire" text="S'inscrire" style="button" shape="circle" icon={{ name: 'mdi:account-plus', side: 'right' }} />
+        <Link href="#" ariaLabel="Lien GitHub icon only" style="link" shape="circle" classes="icon-only" icon={{ name: 'mdi:github', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien primaire clair" text="Primary" style="button" background="primary" textColor="text-dark" border shadow shape="rounded" icon={{ name: 'mdi:check', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien primaire light" text="Primary Light" style="button" backgroundColor="primary-light" textColor="text" border shape="rounded" icon={{ name: 'mdi:weather-sunny', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien primaire foncé" text="Primary Dark" style="button" backgroundColor="primary-dark" textColor="surface" shadow shape="rounded" icon={{ name: 'mdi:weather-night', side: 'right' }} />
+        <Link href="#" ariaLabel="Lien secondaire" text="Secondary" style="button" backgroundColor="secondary" textColor="white" border shadow shape="rounded" icon={{ name: 'mdi:star', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien accent" text="Accent" style="button" backgroundColor="accent-light" textColor="primary-dark" shape="rounded" icon={{ name: 'mdi:flash', side: 'right' }} />
+        <Link href="#" ariaLabel="Lien erreur" text="Erreur" style="button" backgroundColor="error" textColor="white" border shadow shape="rounded" icon={{ name: 'mdi:alert-circle', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien succès" text="Succès" style="button" backgroundColor="success" textColor="surface" border shape="rounded" icon={{ name: 'mdi:check-bold', side: 'right' }} />
+        <Link href="#" ariaLabel="Lien alerte" text="Attention" style="button" backgroundColor="warning" textColor="black" border shadow shape="rounded" icon={{ name: 'mdi:alert', side: 'left' }} />
+        <Link href="#" ariaLabel="Lien sombre" text="Sombre" style="button" backgroundColor="surface-dark" textColor="text" border shadow shape="rounded" icon={{ name: 'mdi:eye-off', side: 'left' }} />
+      </Wrapper>
+    </Section>
+
+    <!-- Boutons -->
+    <Section id="buttons-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:gesture-tap-button">
+        Les Boutons
+      </Text>
+      <Wrapper cols={2} gap="1rem" display="grid">
+        <Button ariaLabel="Bouton simple" text="Simple" type="button" icon={{ name: 'mdi:gesture-tap', side: 'left' }} border shape="sharp" />
+        <Button ariaLabel="Bouton secondaire" text="Secondaire" type="submit" backgroundColor="secondary" textColor="white" border shadow shape="rounded" icon={{ name: 'mdi:email-send', side: 'right' }} />
+        <Button ariaLabel="Bouton upload" text="Téléverser" type="button" icon={{ name: 'mdi:upload', side: 'left' }} backgroundColor="primary" textColor="background" shape="rounded" />
+        <Button ariaLabel="Ajouter utilisateur" text="" type="button" shape="circle" icon={{ name: 'mdi:account-plus', side: 'right' }} backgroundColor="accent" textColor="white" />
+        <Button ariaLabel="GitHub" text="" type="button" shape="circle" icon={{ name: 'mdi:github', side: 'left' }} backgroundColor="text" textColor="background" />
+        <Button ariaLabel="Primary" text="Primary" backgroundColor="primary" textColor="text-dark" border shadow shape="rounded" icon={{ name: 'mdi:check', side: 'left' }} />
+        <Button ariaLabel="Primary Light" text="Primary Light" backgroundColor="primary-light" textColor="text" border shape="rounded" icon={{ name: 'mdi:weather-sunny', side: 'left' }} />
+        <Button ariaLabel="Primary Dark" text="Primary Dark" backgroundColor="primary-dark" textColor="surface" shadow shape="rounded" icon={{ name: 'mdi:weather-night', side: 'right' }} />
+        <Button ariaLabel="Secondary" text="Secondary" backgroundColor="secondary" textColor="white" border shadow shape="rounded" icon={{ name: 'mdi:star', side: 'left' }} />
+        <Button ariaLabel="Accent" text="Accent" backgroundColor="accent-light" textColor="primary-dark" shape="rounded" icon={{ name: 'mdi:flash', side: 'right' }} />
+        <Button ariaLabel="Erreur" text="Erreur" backgroundColor="error" textColor="white" border shadow shape="rounded" icon={{ name: 'mdi:alert-circle', side: 'left' }} />
+        <Button ariaLabel="Succès" text="Succès" backgroundColor="success" textColor="surface" border shape="rounded" icon={{ name: 'mdi:check-bold', side: 'right' }} />
+        <Button ariaLabel="Alerte" text="Attention" backgroundColor="warning" textColor="black" border shadow shape="rounded" icon={{ name: 'mdi:alert', side: 'left' }} />
+        <Button ariaLabel="Sombre" text="Sombre" backgroundColor="surface-dark" textColor="text" border shadow shape="rounded" icon={{ name: 'mdi:eye-off', side: 'left' }} />
+      </Wrapper>
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 4: Listes & Détails -->
+<Section id="lists-details" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:format-list-bulleted-square">
+      Listes & Blocs de Détails
+    </Text>
+    <Text tag="p">
+      Organisation du contenu avec des listes variées et des blocs d'information dépliables (accordions).
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <!-- Listes -->
+    <Section id="lists-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:format-list-bulleted">
+        Listes
+      </Text>
+      <Wrapper gap="1.5rem" flexDirection="column" display="flex">
+        <Text tag="h4" iconLeft="mdi:format-list-bulleted-type">
+          Liste non ordonnée avec icône globale
+        </Text>
+        <List
+          items={['Item un', 'Item deux', 'Item trois']}
+          icon="mdi:check"
+          backgroundColor="background"
+          border
+          shadow
+          spacing="0.75em"
+          shape="rounded"
+        />
+
+        <Text tag="h4" iconLeft="mdi:format-list-numbered">
+          Liste ordonnée avec icônes personnalisées
+        </Text>
+        <List
+          ordered
+          showMarkers={false}
+          items={[
+            { icon: 'mdi:numeric-1-circle', text: 'Première étape' },
+            { icon: 'mdi:numeric-2-circle', text: 'Deuxième étape' },
+            { icon: 'mdi:numeric-3-circle', text: 'Troisième étape' }
+          ]}
+          backgroundColor="background"
+          border
+          borderColor="primary"
+          shape="sharp"
+        />
+
+        <Text tag="h4" iconLeft="mdi:playlist-edit">
+          Liste avec `showMarkers` désactivé (pas de puces)
+        </Text>
+        <List
+          items={['Sans puce 1', 'Sans puce 2']}
+          showMarkers={false}
+          shape="circle"
+          backgroundColor="muted"
+          textColor="text-dark"
+        />
+
+        <Text tag="h4" iconLeft="mdi:format-list-bulleted-square">
+          Liste imbriquée avec puces visibles
+        </Text>
+        <List
+          items={[
+            { text: 'Item principal 1' },
+            { text: 'Item principal 2' }
+          ]}
+          showMarkers={true}
+          backgroundColor="background"
+          shape="rounded"
+        >
+          <ul>
+            <li>Sous-item 1.1</li>
+            <li>Sous-item 1.2</li>
+            <li>Sous-item 2.1</li>
+            <li>Sous-item 2.2</li>
+          </ul>
+        </List>
+      </Wrapper>
+    </Section>
+
+    <!-- Détails / Accordions -->
+    <Section id="details-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:database">
+        Détails (Accordions)
+      </Text>
+      <Wrapper gap="1rem" flexDirection="column" display="flex">
+        <!-- 1. Résumé simple, sans icône -->
+        <Details
+          summary="Résumé simple, sans icône"
+          open
+          border
+          backgroundColor="background"
+        >
+          <Text tag="p">Contenu visible par défaut, sans icône dans le summary.</Text>
+        </Details>
+
+        <!-- 2. Résumé avec icône à gauche -->
+        <Details
+          summary="Résumé avec icône à gauche"
+          iconSummary={{ name: 'mdi:information-outline', side: 'left' }}
+          border
+          shape="rounded"
+          shadow
+        >
+          <Text tag="p">Contenu avec icône à gauche dans le summary, bordure et ombre activées.</Text>
+        </Details>
+
+        <!-- 3. Résumé avec icône à droite -->
+        <Details
+          summary="Résumé avec icône à droite"
+          iconSummary={{ name: 'mdi:alert-circle-outline', side: 'right' }}
+          border
+          borderColor="error"
+          borderWidth="2px"
+          borderStyle="dashed"
+          shape="sharp"
+          backgroundColor="error"
+          textColor="text-dark"
+        >
+          <Text tag="p">Contenu avec icône à droite, bordure rouge en style dashed, fond rouge clair.</Text>
+        </Details>
+
+        <!-- 4. Résumé avec icônes personnalisées ouvert/fermé -->
+        <Details
+          summary="Résumé avec icônes personnalisées ouvert/fermé"
+          iconOpen={{ name: 'mdi:minus' }}
+          iconClose={{ name: 'mdi:plus' }}
+          open={false}
+          border
+          shadow
+          shape="circle"
+          summaryTextColor="accent"
+        >
+          <Text tag="p">Toggle icônes + / - personnalisées avec forme cercle et ombre.</Text>
+        </Details>
+
+        <!-- 5. Résumé avec animation lente -->
+        <Details
+          summary="Résumé avec animation lente"
+          open
+          border
+          animationDuration="0.8s"
+          animationTimingFunction="cubic-bezier(0.4, 0, 0.2, 1)"
+        >
+          <Text tag="p">Cette instance utilise une animation d’ouverture/fermeture plus lente et fluide.</Text>
+        </Details>
+
+        <!-- 6. Résumé sans bordure ni ombre, icône summary gauche et texte centré -->
+        <Details
+          summary="Résumé sans bordure ni ombre, icône summary gauche et texte centré"
+          iconSummary={{ name: 'mdi:account', side: 'left' }}
+          summaryTextAlign="center"
+        >
+          <Text tag="p">Pas de bordure ni d’ombre, icône summary à gauche, texte summary centré.</Text>
+        </Details>
+      </Wrapper>
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 5: Tableaux & Médias -->
+<Section id="tables-media" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:grid-large">
+      Tableaux & Médias
+    </Text>
+    <Text tag="p">
+      Présentation de données structurées et intégration de contenus multimédias.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <!-- Tableaux -->
+    <Section id="tables-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:table">
+        Tableaux
+      </Text>
+      <Wrapper gap="1.5rem" flexDirection="column" display="flex">
+        <Text tag="h4">Tableau HTML natif</Text>
+        <table border="1" cellpadding="4" cellspacing="0">
+          <caption>Exemple de tableau simple</caption>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Âge</th>
+              <th>Ville</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Jean</td>
+              <td>28</td>
+              <td>Paris</td>
+            </tr>
+            <tr>
+              <td>Marie</td>
+              <td>32</td>
+              <td>Lyon</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">Fin du tableau</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <Text tag="h4">Composant Table avec props</Text>
+        <Table
+          columns={[
+          { key: 'name', label: 'Nom', align: 'left', width: '40%' },
+          { key: 'age', label: 'Âge', align: 'center', width: '20%' },
+          { key: 'city', label: 'Ville', align: 'right', width: '40%' },
+          ]}
+          data={[
+          { name: 'Alice', age: 30, city: 'Paris' },
+          { name: 'Bob', age: 25, city: 'Lyon' },
+          { name: 'Charlie', age: 35, city: 'Marseille' },
+          ]}
+          striped
+          bordered
+          hover
+        />
+
+        <Table
+          columns={[
+          { key: 'name', label: 'Nom', align: 'left' },
+          { key: 'age', label: 'Âge', align: 'center' },
+          { key: 'city', label: 'Ville', align: 'right' },
+          ]}
+          data={[
+          { name: 'Alice', age: 30, city: 'Paris' },
+          { name: 'Bob', age: 25, city: 'Lyon' },
+          { name: 'Charlie', age: 35, city: 'Marseille' },
+          ]}
+          compact
+        />
+      </Wrapper>
+    </Section>
+
+    <!-- Images et Médias -->
+    <Section id="media-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:image">
+        Images
+      </Text>
+      <Wrapper gap="1.5rem" flexDirection="column" display="flex" alignItems="center">
+        <Text tag="h4">Image native (avec styles globaux)</Text>
+        <img src="https://via.placeholder.com/150" alt="Image exemple" width="150" height="150" />
+        <Text tag="h4">Composant Image d'Astro (optimisé)</Text>
+        <Image src="https://cataas.com/cat" alt="Image exemple" width="500" height="500" />
+      </Wrapper>
+
+      <Text tag="h3" iconLeft="mdi:music-circle">
+        Audio
+      </Text>
+      <Wrapper gap="1.5rem" flexDirection="column" display="flex" alignItems="center">
+        <audio controls>
+          <source src="https://www.w3schools.com/html/horse.ogg" type="audio/ogg" />
+          <source src="https://www.w3schools.com/html/horse.mp3" type="audio/mpeg" />
+          Votre navigateur ne supporte pas l'élément audio.
+        </audio>
+      </Wrapper>
+
+      <Text tag="h3" iconLeft="mdi:play-circle">
+        Vidéo
+      </Text>
+      <Wrapper gap="1.5rem" flexDirection="column" display="flex" alignItems="center">
+        <video width="320" height="240" controls>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+          Votre navigateur ne supporte pas l'élément vidéo.
+        </video>
+      </Wrapper>
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 6: Formulaires & FAQ -->
+<Section id="forms-faqs" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:form" iconRight="mdi:form" iconPosition="both">
+      Formulaires & FAQ
+    </Text>
+    <Text tag="p">
+      Collecte d'informations utilisateur et réponses aux questions fréquentes.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <!-- Formulaires -->
+    <Section id="forms-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:form-textbox">
+        Formulaires
+      </Text>
+      <Form onSubmit={handleSubmit}>
+        <Input id="name" name="name" type="text" label="Nom" placeholder="Kevin" required />
+        <Input id="email" name="email" type="email" label="Email" placeholder="exemple@domaine.com" required iconLeft={{ name: 'mdi:email-outline' }} />
+        <Input id="age" name="age" type="number" label="Âge" min={0} max={120} />
+        <Input id="color" name="color" type="color" label="Couleur préférée" />
+        <Input id="birthday" name="birthday" type="date" label="Date de naissance" />
+        <Input id="website" name="website" type="url" label="Site Web" />
+        <Input id="bio" name="bio" type="textarea" label="Biographie" rows={4} cols={40} placeholder="Écrivez ici..." />
+        <fieldset>
+          <legend>Sexe</legend>
+          <label><input type="radio" id="gender-male" name="gender" value="male" /> Homme</label>
+          <label><input type="radio" id="gender-female" name="gender" value="female" /> Femme</label>
+          <label><input type="radio" id="gender-other" name="gender" value="other" /> Autre</label>
+        </fieldset>
+        <fieldset>
+          <legend>Centres d'intérêt</legend>
+          <label><input type="checkbox" id="interest-sport" name="interests" value="sport" /> Sport</label>
+          <label><input type="checkbox" id="interest-music" name="interests" value="music" /> Musique</label>
+          <label><input type="checkbox" id="interest-reading" name="interests" value="reading" /> Lecture</label>
+        </fieldset>
+        <Input
+          id="country"
+          name="country"
+          type="select"
+          label="Pays"
+          options={[
+            { value: '', label: 'Sélectionnez' },
+            { value: 'france', label: 'France' },
+            { value: 'belgium', label: 'Belgique' },
+            { value: 'canada', label: 'Canada' },
+          ]}
+        />
+        <Button text="Soumettre" type="submit" preset="primary" />
+      </Form>
+    </Section>
+
+    <!-- FAQ -->
+    <Section id="faq-showcase" tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:help-box">
+        Questions Fréquentes (FAQ)
+      </Text>
+      <Faq faqs={[
+          {
+            question: "Comment ajouter des styles personnalisés ?",
+            answer: `
+              <p>Tu peux passer des props à <code>Details.astro</code> (utilisé par Faq) pour changer la couleur, la bordure, etc.</p>
+              <ul>
+                <li><code>borderColor</code></li>
+                <li><code>padding</code></li>
+                <li><code>shadow</code></li>
+              </ul>
+              <p>Exemple : <code><Details borderColor="primary"></code> pour la bordure en couleur primaire.</p>
+            `,
+          },
+          {
+            question: "Peut-on mettre des liens dans la réponse ?",
+            answer: `
+              Oui, tu peux inclure du HTML, comme par exemple :
+              <a href="https://astro.build" target="_blank" rel="noopener">Site officiel Astro</a>.
+            `,
+          },
+          {
+            question: "Ce système est-il vraiment ultra-performant ?",
+            answer: `
+              Absolument ! Il a été conçu pour minimiser le JavaScript, utiliser des composants légers
+              et s'appuyer sur les fonctionnalités natives du navigateur et le CSS pour une performance optimale.
+            `,
+          }
+        ]}
+      />
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 7: Galeries -->
+<Section id="galleries" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:image-multiple">
+      Galeries & Visuels
+    </Text>
+    <Text tag="p">
+      Présentez vos images de manière variée avec différentes mises en page de galerie.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={1} gap="3rem">
+    <!-- Standard Gallery -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:image-album">
+        Gallery Standard (Preset Primary)
+      </Text>
+      <Gallery
+        images={galleryImages}
+        mode="gallery"
+        preset="primary"
+        columns={3}
+        aspectRatio="4/3"
+      />
+    </Section>
+
+    <!-- Pictures Gallery (Masonry-like) -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:image-area">
+        Gallery Pictures - Masonry (Preset Secondary)
+      </Text>
+      <Gallery
+        images={galleryImages}
+        mode="galleryPictures"
+        preset="secondary"
+        columns={4}
+      />
+    </Section>
+
+    <!-- Product Thumbnail Gallery -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:image-size-select-actual">
+        Gallery Product Thumbnails (Preset Accent)
+      </Text>
+      <Wrapper maxWidth="600px" margin="0 auto">
+        <Gallery
+          images={productImages}
+          mode="galleryProductThumb"
+          preset="accent"
+        />
+      </Wrapper>
+    </Section>
+
+    <!-- Enhanced Gallery -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:image-edit">
+        Gallery Enhanced avec Overlay (Preset Default)
+      </Text>
+      <Gallery
+        images={galleryImages}
+        mode="galleryEnhanced"
+        preset="default"
+        columns={3}
+        aspectRatio="16/9"
+      />
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 8: Carrousels -->
+<Section id="carousels" tag="section" preset="accent">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:view-carousel">
+      Carrousels Performants
+    </Text>
+    <Text tag="p">
+      Carrousels optimisés avec navigation tactile, clavier et contrôles accessibles.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <!-- Carousel Primary -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:play-circle-outline">
+        Carousel Primary avec Auto-play
+      </Text>
+      <Carousel
+        preset="primary"
+        idPrefix="carousel-primary"
+        showDots={true}
+        showArrows={true}
+        autoplay={true}
+        autoplayInterval={3000}
+        aspectRatio="16/9"
+      >
+        <Image src="https://picsum.photos/800/450?random=20" alt="Slide 1" width={800} height={450}/>
+        <Image src="https://picsum.photos/800/450?random=21" alt="Slide 2" width={800} height={450}/>
+        <Image src="https://picsum.photos/800/450?random=22" alt="Slide 3" width={800} height={450}/>
+        <Image src="https://picsum.photos/800/450?random=23" alt="Slide 4" width={800} height={450}/>
+      </Carousel>
+    </Section>
+
+    <!-- Carousel Secondary -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:arrow-right-circle-outline">
+        Carousel Secondary Manuel
+      </Text>
+      <Carousel
+        preset="secondary"
+        idPrefix="carousel-secondary"
+        showDots={true}
+        showArrows={true}
+        autoplay={false}
+        aspectRatio="4/3"
+      >
+        <Image src="https://picsum.photos/800/600?random=24" alt="Slide 1" width={800} height={600}/>
+        <Image src="https://picsum.photos/800/600?random=25" alt="Slide 2" width={800} height={600}/>
+        <Image src="https://picsum.photos/800/600?random=26" alt="Slide 3" width={800} height={600}/>
+      </Carousel>
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 9: Sliders -->
+<Section id="sliders" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:view-carousel">
+      Sliders Horizontaux
+    </Text>
+    <Text tag="p">
+      Sliders avec défilement fluide, support tactile et contrôles de navigation.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={1} gap="3rem">
+    <!-- Slider Primary -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:mouse-scroll-wheel">
+        Slider Primary avec Auto-scroll
+      </Text>
+      <Slider
+        preset="primary"
+        gap="2rem"
+        itemMinWidth="300px"
+        autoScroll={true}
+        scrollSpeed={30}
+      >
+        <Wrapper>
+          <Image src="https://picsum.photos/280/200?random=30" alt="Item 1" width={280} height={200} />
+          <Text tag="h4">Produit 1</Text>
+          <Text tag="p">Description du produit</Text>
+        </Wrapper>
+        <Wrapper>
+          <Image src="https://picsum.photos/280/200?random=31" alt="Item 2" width={280} height={200} />
+          <Text tag="h4">Produit 2</Text>
+          <Text tag="p">Description du produit</Text>
+        </Wrapper>
+        <Wrapper>
+          <Image src="https://picsum.photos/280/200?random=32" alt="Item 3" width={280} height={200} />
+          <Text tag="h4">Produit 3</Text>
+          <Text tag="p">Description du produit</Text>
+        </Wrapper>
+        <Wrapper>
+          <Image src="https://picsum.photos/280/200?random=33" alt="Item 4" width={280} height={200} />
+          <Text tag="h4">Produit 4</Text>
+          <Text tag="p">Description du produit</Text>
+        </Wrapper>
+        <Wrapper>
+          <Image src="https://picsum.photos/280/200?random=34" alt="Item 5" width={280} height={200} />
+          <Text tag="h4">Produit 5</Text>
+          <Text tag="p">Description du produit</Text>
+        </Wrapper>
+      </Slider>
+    </Section>
+
+    <!-- Slider Accent -->
+    <Section tag="div" preset="default">
+      <Text tag="h3" iconLeft="mdi:speedometer">
+        Slider Accent Manuel
+      </Text>
+      <Slider
+        preset="accent"
+        gap="1.5rem"
+        itemMinWidth="250px"
+        showScrollbar={true}
+      >
+        <Wrapper border>
+          <Text tag="h4">Feature 1</Text>
+          <Text tag="p">Description de la fonctionnalité</Text>
+        </Wrapper>
+        <Wrapper border>
+          <Text tag="h4">Feature 2</Text>
+          <Text tag="p">Description de la fonctionnalité</Text>
+        </Wrapper>
+        <Wrapper border>
+          <Text tag="h4">Feature 3</Text>
+          <Text tag="p">Description de la fonctionnalité</Text>
+        </Wrapper>
+        <Wrapper border>
+          <Text tag="h4">Feature 4</Text>
+          <Text tag="p">Description de la fonctionnalité</Text>
+        </Wrapper>
+      </Slider>
+    </Section>
+  </Wrapper>
+</Section>
+
+<!-- Section 10: Grilles Responsives -->
+<Section id="responsive-grid" tag="section" preset="secondary">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:grid">
+      Grilles Responsives (via classes CSS)
+    </Text>
+    <Text tag="p">
+      Démonstration des colonnes de grille qui s'adaptent automatiquement grâce aux classes utilitaires de `styles.css`.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={6} gap="1rem" display="grid">
+    {Array.from({length: 12}, (_, i) => (
+      <div style="background: white; padding: 1rem; border-radius: 0.5rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <Text tag="p">Item {i + 1}</Text>
+      </div>
+    ))}
+  </Wrapper>
+  <Text tag="p">
+    Desktop: `cols-6` (6 colonnes) | Tablette: 2 colonnes | Mobile: 1 colonne (définis dans `styles.css`)
+  </Text>
+</Section>
+
+<!-- Section 11: Fonctionnalités Clés du Design System -->
+<Section id="performance-features" tag="section" preset="default">
+  <Wrapper cols={1} gap="2rem">
+    <Text tag="h2" iconLeft="mdi:rocket-launch">
+      Fonctionnalités Clés du Design System
+    </Text>
+    <Text tag="p">
+      Les principes fondamentaux qui garantissent l'efficacité et la maintenabilité de votre interface.
+    </Text>
+  </Wrapper>
+
+  <Wrapper cols={2} gap="2rem" display="grid">
+    <Wrapper preset="default" border shadow>
+      <Text tag="h3" iconLeft="mdi:code-not-equal">
+        ⚡ Sans JavaScript (si possible)
+      </Text>
+      <Text tag="p">
+        La plupart des composants fonctionnent principalement avec CSS et les fonctionnalités natives du navigateur pour une performance maximale.
+      </Text>
+    </Wrapper>
+
+    <Wrapper preset="default" border shadow>
+      <Text tag="h3" iconLeft="mdi:cellphone-link">
+        📱 100% Responsive
+      </Text>
+      <Text tag="p">
+        Adaptation parfaite sur tous les appareils et tailles d'écran grâce à des media queries bien définies et des approches "mobile-first".
+      </Text>
+    </Wrapper>
+
+    <Wrapper preset="default" border shadow>
+      <Text tag="h3" iconLeft="mdi:palette-swatch-outline">
+        🎨 Presets Élégants
+      </Text>
+      <Text tag="p">
+        Des presets prédéfinis pour chaque composant assurent une cohérence visuelle instantanée et accélèrent le développement.
+      </Text>
+    </Wrapper>
+
+    <Wrapper preset="default" border shadow>
+      <Text tag="h3" iconLeft="mdi:wheelchair-accessibility">
+        ♿ Accessible
+      </Text>
+      <Text tag="p">
+        Conçu avec l'accessibilité à l'esprit, supportant la navigation au clavier, les lecteurs d'écran et l'intégration des attributs ARIA.
+      </Text>
+    </Wrapper>
+  </Wrapper>
+</Section>
+</Layout>

@@ -1,0 +1,314 @@
+---
+
+import Button from "@atoms/Button.astro";
+import Input from "@atoms/Input.astro";
+import Section from "@atoms/Section.astro";
+import type { AstroGlobal } from "astro";
+---
+
+<div id="auth-modal-overlay" class="auth-modal-overlay" tabindex="-1" aria-modal="true" role="dialog" style="display: none;">
+  <Section className="auth-modal login-wrap" role="document" tabindex="0" backgroundColor="white" border shadow style="max-width:420px;min-width:320px;">
+    <!-- Suppression de la croix de fermeture -->
+    <div class="login-html">
+      <input id="tab-1" type="radio" name="tab" class="sign-in" checked style="display:none;">
+      <input id="tab-2" type="radio" name="tab" class="sign-up" style="display:none;">
+      <div class="tab-toggle-group" role="tablist" aria-label="Choix du mode">
+        <button type="button" id="tab-btn-1" class="tab tab-btn" role="tab" aria-selected="true" aria-controls="sign-in-htm" tabindex="0">
+          <span>Connexion</span>
+        </button>
+        <button type="button" id="tab-btn-2" class="tab tab-btn" role="tab" aria-selected="false" aria-controls="sign-up-htm" tabindex="-1">
+          <span>Créer un compte</span>
+        </button>
+      </div>
+      <div class="login-form" style="min-height:440px;max-height:440px;overflow:visible;">
+        <div class="sign-in-htm" id="sign-in-htm">
+          <form id="auth-form-login">
+            <Input id="auth-email" name="email" type="email" label="Email" placeholder="Email" required className="input" />
+            <Input id="auth-password" name="password" type="password" label="Mot de passe" placeholder="Mot de passe" required className="input" />
+            <div id="auth-error-login" class="error" style="display:none;"></div>
+            <div id="auth-success-login" class="success" style="display:none;"></div>
+            <button id="auth-submit-login" type="submit" class="button" style="margin-top:1rem;background:var(--color-primary,#1161ee);color:#fff;border-radius:2rem;padding:0.75rem 2.5rem;font-weight:700;font-size:1.15rem;">Connexion</button>
+            <Button type="button" text="Créer un compte" className="button" shape="rounded" backgroundColor="background" textColor="primary" style="margin-top:0.5rem;" id="switch-to-signup" />
+            <div class="hr"></div>
+            <div class="foot-lnk">
+              <a href="#" id="forgot-link">Mot de passe oublié ?</a>
+            </div>
+          </form>
+        </div>
+        <div class="sign-up-htm" id="sign-up-htm">
+          <form id="auth-form-signup">
+            <Input id="auth-name-signup" name="name" type="text" label="Nom" placeholder="Votre nom" required className="input" />
+            <Input id="auth-email-signup" name="email" type="email" label="Email" placeholder="Email" required className="input" />
+            <Input id="auth-password-signup" name="password" type="password" label="Mot de passe" placeholder="Mot de passe" required className="input" />
+            <Input id="auth-password-repeat" name="password-repeat" type="password" label="Répéter le mot de passe" placeholder="Répéter le mot de passe" required className="input" />
+            <div id="auth-error-signup" class="error" style="display:none;"></div>
+            <div id="auth-success-signup" class="success" style="display:none;"></div>
+            <button id="auth-submit-signup" type="submit" class="button" style="margin-top:1rem;background:var(--color-primary,#1161ee);color:#fff;border-radius:2rem;padding:0.75rem 2.5rem;font-weight:700;font-size:1.15rem;">Créer un compte</button>
+            <Button type="button" text="Déjà inscrit ? Connexion" className="button" shape="rounded" backgroundColor="background" textColor="primary" style="margin-top:0.5rem;" id="switch-to-login" />
+            <div class="hr"></div>
+            <div class="foot-lnk">
+              <label for="tab-1">Déjà inscrit ? Connexion</label>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </Section>
+</div>
+
+<script type="module">
+  // Registration
+  const signupForm = document.getElementById('auth-form-signup');
+  const errorDivSignup = document.getElementById('auth-error-signup');
+  const successDivSignup = document.getElementById('auth-success-signup');
+  if (signupForm) {
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorDivSignup.style.display = 'none';
+      successDivSignup.style.display = 'none';
+      const formData = new FormData(signupForm);
+      // Validation côté client
+      if (formData.get('password') !== formData.get('password-repeat')) {
+        errorDivSignup.textContent = 'Les mots de passe ne correspondent pas.';
+        errorDivSignup.style.display = 'block';
+        return;
+      }
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.error) {
+        errorDivSignup.textContent = data.error;
+        errorDivSignup.style.display = 'block';
+      } else {
+        successDivSignup.textContent = 'Inscription réussie ! Vérifiez votre email pour valider votre compte.';
+        successDivSignup.style.display = 'block';
+        signupForm.reset();
+      }
+    });
+  }
+
+  // Login
+  const loginForm = document.getElementById('auth-form-login');
+  const errorDivLogin = document.getElementById('auth-error-login');
+  const successDivLogin = document.getElementById('auth-success-login');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorDivLogin.style.display = 'none';
+      successDivLogin.style.display = 'none';
+      const formData = new FormData(loginForm);
+      const res = await fetch('/api/auth/sign-in/email', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.error) {
+        errorDivLogin.textContent = data.error;
+        errorDivLogin.style.display = 'block';
+      } else {
+        successDivLogin.textContent = 'Connexion réussie !';
+        successDivLogin.style.display = 'block';
+        loginForm.reset();
+        window.location.reload();
+      }
+    });
+  }
+</script>
+<style>
+body {
+  margin: 0;
+  color: #6a6f8c;
+  background: #c8c8c8;
+  font: 600 16px/18px 'Open Sans', sans-serif;
+}
+.auth-modal-overlay {
+  position: fixed;
+  z-index: 10000;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(40,57,101,.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.auth-modal {
+  background: #fff;
+  border-radius: 1.25rem;
+  box-shadow: 0 12px 15px 0 rgba(0,0,0,.24),0 17px 50px 0 rgba(0,0,0,.19);
+  padding: 2.5rem 2rem 2rem 2rem;
+  min-width: 340px;
+  max-width: 98vw;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  animation: modalIn 0.18s cubic-bezier(.4,1.6,.6,1) both;
+  font-family: 'Open Sans', sans-serif;
+}
+/* Close button spacing for better separation */
+/* Close button always above content */
+/* Close button always above content and never overlaps form */
+/* Suppression du style du bouton de fermeture, le bouton n'existe plus */
+.tab-toggle-group {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  min-height: 3.5rem;
+}
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 2rem 2rem 0 0;
+  background: none;
+  border: none;
+  color: var(--color-primary, #1161ee);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  outline: none;
+  position: relative;
+  min-width: 140px;
+  min-height: 3.5rem;
+}
+.tab-btn[aria-selected="true"], .tab-btn.active {
+  background: var(--color-primary, #1161ee);
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgba(17,97,238,0.08);
+  z-index: 2;
+}
+.tab-btn:focus {
+  outline: 2px solid var(--color-primary, #1161ee);
+}
+.login-form {
+  background: #f8faff;
+  border-radius: 1.25rem;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  box-shadow: 0 2px 8px 0 rgba(17,97,238,0.04);
+}
+.auth-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.auth-modal .error {
+  color: #ff5252;
+  font-size: 0.98rem;
+  margin-bottom: 0.5rem;
+}
+.auth-modal .success {
+  color: #2ecc40;
+  font-size: 0.98rem;
+  margin-bottom: 0.5rem;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(32px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 480px) {
+  .auth-modal {
+    min-width: 0;
+    width: 98vw;
+    padding: 1.25rem 0.5rem 1rem 0.5rem;
+  }
+  .login-form {
+    padding: 1.5rem 1rem 1rem 1rem;
+    min-height: 400px;
+    max-height: 400px;
+    overflow: visible;
+  }
+  .tab-btn {
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    min-width: 100px;
+    min-height: 2.5rem;
+  }
+}
+</style>
+
+
+<script type="module">
+window.addEventListener('DOMContentLoaded', () => {
+  // Tab logic: show only the selected tab content and update tab button states
+  const tab1 = document.getElementById('tab-1');
+  const tab2 = document.getElementById('tab-2');
+  const signIn = document.getElementById('sign-in-htm');
+  const signUp = document.getElementById('sign-up-htm');
+  const tabBtn1 = document.getElementById('tab-btn-1');
+  const tabBtn2 = document.getElementById('tab-btn-2');
+  function updateTabs() {
+    if (tab1.checked) {
+      signIn.style.display = '';
+      signUp.style.display = 'none';
+      tabBtn1.setAttribute('aria-selected', 'true');
+      tabBtn2.setAttribute('aria-selected', 'false');
+      tabBtn1.classList.add('active');
+      tabBtn2.classList.remove('active');
+      tabBtn1.tabIndex = 0;
+      tabBtn2.tabIndex = -1;
+    } else {
+      signIn.style.display = 'none';
+      signUp.style.display = '';
+      tabBtn1.setAttribute('aria-selected', 'false');
+      tabBtn2.setAttribute('aria-selected', 'true');
+      tabBtn1.classList.remove('active');
+      tabBtn2.classList.add('active');
+      tabBtn1.tabIndex = -1;
+      tabBtn2.tabIndex = 0;
+    }
+  }
+  // Tab button click events
+  tabBtn1.addEventListener('click', (e) => {
+    if (!tab1.checked) {
+      tab1.checked = true;
+      tab1.dispatchEvent(new Event('change'));
+    }
+    tabBtn1.focus();
+  });
+  tabBtn2.addEventListener('click', (e) => {
+    if (!tab2.checked) {
+      tab2.checked = true;
+      tab2.dispatchEvent(new Event('change'));
+    }
+    tabBtn2.focus();
+  });
+
+  // Keyboard navigation for tabs
+  [tabBtn1, tabBtn2].forEach((btn, idx, arr) => {
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const next = e.key === 'ArrowRight' ? (idx + 1) % arr.length : (idx - 1 + arr.length) % arr.length;
+        arr[next].focus();
+        arr[next].click();
+      }
+    });
+  });
+
+  // Switch-to-signup/login button logic
+  document.getElementById('switch-to-signup').addEventListener('click', () => {
+    if (!tab2.checked) {
+      tab2.checked = true;
+      tab2.dispatchEvent(new Event('change'));
+    }
+    tabBtn2.focus();
+  });
+  document.getElementById('switch-to-login').addEventListener('click', () => {
+    if (!tab1.checked) {
+      tab1.checked = true;
+      tab1.dispatchEvent(new Event('change'));
+    }
+    tabBtn1.focus();
+  });
+  tab1.addEventListener('change', updateTabs);
+  tab2.addEventListener('change', updateTabs);
+  updateTabs();
+});
+</script>

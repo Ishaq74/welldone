@@ -1,0 +1,75 @@
+---
+import Button from "@atoms/Button.astro";
+// import { auth } from "@lib/auth";
+// Use the 'user' prop for test compatibility
+const { user } = Astro.props;
+---
+
+<div class="user-menu">
+  {user ? (
+    <div>
+      <span>{user.name} ({user.email})</span>
+      <span style="font-size:0.9em;color:#888;">{user.role}</span>
+      <a href="/profil" class="button outline">Profil</a>
+      {user.role === "admin" && <a href="/admin" class="button outline">Admin</a>}
+      <form method="post" action="/api/auth/signout" style="display:inline;">
+        <button type="submit" class="button outline">Déconnexion</button>
+      </form>
+    </div>
+  ) : (
+    <form method="post" action="/api/auth/signin" style="display:inline;">
+      <button type="submit" class="button outline">Connexion</button>
+    </form>
+  )}
+</div>
+<style is:inline>
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--color-bg-secondary, #f8f9fa);
+  border-radius: 2rem;
+  padding: 0.25rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1rem;
+  min-width: 220px;
+  max-width: 100vw;
+  transition: box-shadow 0.18s;
+}
+.user-menu span {
+  font-weight: 600;
+  color: var(--color-primary, #1a237e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-menu .button.outline {
+  padding: 0.25rem 1rem;
+  border-radius: 1.5rem;
+  border: 1px solid var(--color-primary, #1a237e);
+  background: white;
+  color: var(--color-primary, #1a237e);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+  font-size: 1rem;
+}
+.user-menu .button.outline:focus,
+.user-menu .button.outline:hover {
+  background: var(--color-primary, #1a237e);
+  color: white;
+}
+@media (max-width: 600px) {
+  .user-menu {
+    min-width: 0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.95rem;
+  }
+  .user-menu span {
+    max-width: 90px;
+  }
+}
+</style>
+<!-- Plus de script JS, tout est rendu côté serveur avec Astro et Better Auth -->

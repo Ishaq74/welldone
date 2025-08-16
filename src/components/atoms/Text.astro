@@ -1,0 +1,118 @@
+---
+// Heading.astro
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  tag?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'strong';
+  align?: 'center' | 'left' | 'right';
+  iconLeft?: string;
+  iconRight?: string;
+  iconSize?: number;
+  iconPosition?: 'left' | 'right' | 'both';
+  textColor?: string;
+  padding?: string;
+  paddingBlock?: string;
+  paddingInline?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
+  paddingRight?: string;
+  margin?: string;
+  marginBlock?: string;
+  marginInline?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  marginLeft?: string;
+  marginRight?: string;
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: string;
+  backgroundColor?: string;
+  className?: string;
+  style?: string;
+  [key: string]: any;
+}
+
+const {
+  tag = 'p',
+  align = 'center',
+  iconLeft,
+  iconRight,
+  iconSize = 24,
+  iconPosition = 'left',
+  textColor = 'black',
+  padding,
+  paddingBlock,
+  paddingInline,
+  paddingTop,
+  paddingBottom,
+  paddingLeft,
+  paddingRight,
+  margin,
+  marginBlock,
+  marginInline,
+  marginTop,
+  marginBottom,
+  marginLeft,
+  marginRight,
+  border = false,
+  borderColor = 'black',
+  borderWidth = '2px',
+  borderStyle = 'solid',
+  backgroundColor,
+  className = '',
+  style: inlineStyle = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const validTags = ['h1','h2','h3','h4','h5','h6','p','span'];
+const HeadingTag = validTags.includes(tag) ? tag : 'p';
+
+const justifyContentClass = {
+  left: 'justify-start',
+  center: 'justify-center',
+  right: 'justify-end',
+}[align] ?? 'justify-center';
+
+const cssColor = `var(--color-${textColor})`;
+
+const style = [
+  `display: block;`,
+  `align-items: center;`,
+  `color: ${cssColor};`,
+  padding ? `padding: ${padding};` : '',
+  paddingBlock ? `padding-block: ${paddingBlock};` : '',
+  paddingInline ? `padding-inline: ${paddingInline};` : '',
+  paddingTop ? `padding-top: ${paddingTop};` : '',
+  paddingBottom ? `padding-bottom: ${paddingBottom};` : '',
+  paddingLeft ? `padding-left: ${paddingLeft};` : '',
+  paddingRight ? `padding-right: ${paddingRight};` : '',
+  margin ? `margin: ${margin};` : '',
+  marginBlock ? `margin-block: ${marginBlock};` : '',
+  marginInline ? `margin-inline: ${marginInline};` : '',
+  marginTop ? `margin-top: ${marginTop};` : '',
+  marginBottom ? `margin-bottom: ${marginBottom};` : '',
+  marginLeft ? `margin-left: ${marginLeft};` : '',
+  marginRight ? `margin-right: ${marginRight};` : '',
+  border ? `border: ${borderWidth} ${borderStyle} ${borderColor};` : '',
+  backgroundColor ? `background-color: ${backgroundColor};` : '',
+  inlineStyle
+].filter(Boolean).join(' ');
+---
+
+<HeadingTag class={`heading ${className} ${tag}`} style={style} {...htmlAttributes}>
+  {(iconLeft || iconRight) ? (
+    <>
+      {(iconLeft && (iconPosition === 'left' || iconPosition === 'both')) && (
+        <Icon name={iconLeft} size={iconSize} style="margin-right: 0.5em;" />
+      )}
+      <slot />
+      {(iconRight && (iconPosition === 'right' || iconPosition === 'both')) && (
+        <Icon name={iconRight} size={iconSize} style="margin-left: 0.5em;" />
+      )}
+    </>
+  ) : (
+    <slot />
+  )}
+</HeadingTag>

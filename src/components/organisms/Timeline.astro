@@ -1,0 +1,83 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface TimelineEvent {
+  year: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+interface Props {
+  events: TimelineEvent[];
+  preset?: 'primary' | 'secondary' | 'accent';
+}
+
+const { events, preset = 'primary' } = Astro.props;
+---
+
+<div class="timeline-container">
+  {events.map((event, index) => (
+    <div class:list={["timeline-item", { "is-last": index === events.length - 1 }]}>
+      <div class:list={["timeline-icon", `icon-preset-${preset}`]}>
+        <Icon name={event.icon} class="w-6 h-6" />
+      </div>
+      <div class="timeline-content">
+        <span class:list={["timeline-year", `year-preset-${preset}`]}>{event.year}</span>
+        <h3 class="font-bold text-lg mt-1">{event.title}</h3>
+        <p class="text-sm text-gray-600 mt-1">{event.description}</p>
+      </div>
+    </div>
+  ))}
+</div>
+
+<style define:vars={{ presetColor: `var(--color-${preset})` }}>
+  .timeline-container {
+    position: relative;
+    max-width: 36rem;
+    margin: 0 auto;
+  }
+  .timeline-container::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    background-color: #e2e8f0;
+    top: 0;
+    bottom: 0;
+    left: 1.375rem; /* Aligné au centre de l'icône */
+    margin-left: -1.5px;
+  }
+  .timeline-item {
+    padding: 1rem 0 2rem 3.5rem;
+    position: relative;
+  }
+  .timeline-item.is-last {
+    padding-bottom: 0;
+  }
+  .timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0.25rem;
+    background-color: white;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .icon-preset-primary { border: 3px solid var(--color-primary); color: var(--color-primary); }
+  .icon-preset-secondary { border: 3px solid var(--color-secondary); color: var(--color-secondary); }
+  .icon-preset-accent { border: 3px solid var(--color-accent); color: var(--color-accent); }
+
+  .timeline-year {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 9999px;
+  }
+  .year-preset-primary { background-color: var(--color-primary-light); color: var(--color-primary-dark); }
+  .year-preset-secondary { background-color: var(--color-secondary-light); color: var(--color-secondary-dark); }
+  .year-preset-accent { background-color: var(--color-accent-light); color: var(--color-accent-dark); }
+</style>

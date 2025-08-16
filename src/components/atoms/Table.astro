@@ -1,0 +1,123 @@
+---
+interface Column {
+  key: string;
+  label: string;
+  align?: 'left' | 'center' | 'right';
+  width?: string;
+}
+
+interface Props {
+  columns: Column[];
+  data: Record<string, any>[];
+  striped?: boolean;
+  bordered?: boolean;
+  hover?: boolean;
+  compact?: boolean;
+  className?: string;
+  style?: string;
+  [key: string]: any;
+}
+
+const {
+  columns,
+  data,
+  striped = false,
+  bordered = false,
+  hover = false,
+  compact = false,
+  className = '',
+  style: inlineStyle = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const designTokens = [
+  'primary', 'secondary', 'accent', 'background', 'text', 'border', 'hover', 'focus',
+  'warning', 'info', 'disabled', 'muted', 'surface', 'shadow', 'error', 'success',
+  'primary-light', 'secondary-light', 'accent-light', 'background-dark', 'text-dark',
+  'border-dark', 'hover-dark', 'surface-dark', 'muted-dark'
+];
+
+function token(val: string | undefined) {
+  return val && designTokens.includes(val) ? `var(--color-${val})` : val;
+}
+
+const tableClass = [
+  'table-wrapper',
+  striped ? 'striped' : '',
+  bordered ? 'bordered' : '',
+  hover ? 'hover' : '',
+  compact ? 'compact' : '',
+  className
+].filter(Boolean).join(' ');
+
+const tableStyle = [
+  inlineStyle
+].filter(Boolean).join(' ');
+---
+
+<table class={tableClass} style={tableStyle} {...htmlAttributes}>
+  <thead>
+    <tr>
+      {columns.map(({ key, label, align = 'left', width }) => (
+        <th
+          style={`text-align: ${align};${width ? `width: ${width};` : ''}`}
+          scope="col"
+        >
+          {label}
+        </th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {data.map((row) => (
+      <tr>
+        {columns.map(({ key, align = 'left' }) => (
+          <td style={`text-align: ${align};`}>
+            {row[key]}
+          </td>
+        ))}
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+<style is:inline>
+  table.table-wrapper {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: system-ui, sans-serif;
+    font-size: 1rem;
+    color: var(--color-text, #222);
+  }
+
+  table.table-wrapper thead th {
+    background-color: var(--color-surface, #f0f0f0);
+    font-weight: 700;
+    padding: 0.6em 1em;
+    border-bottom: 2px solid var(--color-border, #ccc);
+  }
+
+  table.table-wrapper tbody td {
+    padding: 0.6em 1em;
+    border-bottom: 1px solid var(--color-border, #eee);
+  }
+
+  table.table-wrapper.bordered thead th,
+  table.table-wrapper.bordered tbody td {
+    border: 1px solid var(--color-border, #ccc);
+  }
+
+  table.table-wrapper.striped tbody tr:nth-child(odd) {
+    background-color: var(--color-surface-alt, #fafafa);
+  }
+
+  table.table-wrapper.hover tbody tr:hover {
+    background-color: var(--color-primary-light, #def);
+    cursor: pointer;
+  }
+
+  table.table-wrapper.compact thead th,
+  table.table-wrapper.compact tbody td {
+    padding: 0.25em 0.5em;
+  }
+</style>

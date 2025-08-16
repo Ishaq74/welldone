@@ -1,0 +1,180 @@
+---
+const { entry } = Astro.props;
+const restaurant = entry.data;
+---
+<article class={"card restaurant-card" + (restaurant.isFeatured ? " featured" : "") + (restaurant.rating >= 4.5 ? " top-rated" : "")}
+  aria-label={restaurant.name} tabindex="0">
+  <a href={`/restaurants/${restaurant.slug}`} class="card-link" aria-label={`Voir la fiche de ${restaurant.name}`} tabindex="-1">
+    <img src={restaurant.image} alt={restaurant.name} class="card-img" loading="lazy" width="400" height="240" />
+  </a>
+  <div class="card-content">
+    <header class="card-header">
+      <h2 class="card-title"><a href={`/restaurants/${restaurant.slug}`}>{restaurant.name}</a></h2>
+      {restaurant.isFeatured && <span class="badge badge-featured" aria-label="Coup de cœur">★</span>}
+      {restaurant.rating > 0 && <span class="rating" aria-label={`Note : ${restaurant.rating}/5`}>{restaurant.rating.toFixed(1)}<span aria-hidden="true">★</span></span>}
+    </header>
+    <div class="card-meta">
+      {restaurant.category && <span class="category">{restaurant.category}</span>}
+      {restaurant.priceRange && <span class="price-range">{restaurant.priceRange}</span>}
+      {restaurant.tags.length > 0 && <ul class="tags">{restaurant.tags.map(tag => <li>{tag}</li>)}</ul>}
+    </div>
+    {restaurant.description && <p class="card-desc">{restaurant.description}</p>}
+    <address class="card-address">
+      {restaurant.address && <span>{restaurant.address}</span>}
+      {restaurant.city && <span>{restaurant.city}</span>}
+      {restaurant.postalCode && <span>{restaurant.postalCode}</span>}
+    </address>
+    <div class="card-actions">
+      {restaurant.phone && <a href={`tel:${restaurant.phone}`} class="btn btn-sm" aria-label={`Appeler ${restaurant.name}`}>Appeler</a>}
+      {restaurant.website && <a href={restaurant.website} class="btn btn-sm" target="_blank" rel="noopener" aria-label={`Site web de ${restaurant.name}`}>Site web</a>}
+      <a href={`/restaurants/${restaurant.slug}`} class="btn btn-primary btn-sm" aria-label={`Voir la fiche de ${restaurant.name}`}>Voir</a>
+    </div>
+  </div>
+</article>
+
+<style is:global>
+.card.restaurant-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background, #fff);
+  border-radius: var(--radius, 1rem);
+  box-shadow: var(--shadow, 0 2px 8px rgba(0,0,0,0.08));
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+  outline: none;
+  border: 2px solid transparent;
+  min-width: 260px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.card.restaurant-card:focus-within,
+.card.restaurant-card:hover {
+  box-shadow: 0 4px 16px rgba(30,136,229,0.15);
+  border-color: var(--color-primary, #1e88e5);
+  transform: translateY(-2px) scale(1.01);
+}
+.card-link {
+  display: block;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+}
+.card-img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--color-border, #e0e2e9);
+  background: var(--color-bg-muted, #f7f7f7);
+  transition: filter 0.2s;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.card-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+  flex: 1;
+}
+.badge-featured {
+  background: var(--color-primary, #1e88e5);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2em 0.7em;
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-left: 0.5em;
+}
+.rating {
+  color: var(--color-accent, #f0ad4e);
+  font-weight: 600;
+  font-size: 1em;
+  margin-left: 0.5em;
+}
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1em;
+  font-size: 0.95em;
+  color: var(--color-text-muted, #757575);
+  margin-bottom: 0.5em;
+}
+.category {
+  background: var(--color-secondary, #e0e2e9);
+  color: var(--color-text, #1f2527);
+  border-radius: 0.5em;
+  padding: 0.1em 0.7em;
+  font-size: 0.95em;
+}
+.price-range {
+  color: var(--color-primary, #1e88e5);
+  font-weight: 500;
+}
+.tags {
+  display: flex;
+  gap: 0.3em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tags li {
+  background: var(--color-hover, #c4c8d4);
+  color: var(--color-text, #1f2527);
+  border-radius: 0.5em;
+  padding: 0.1em 0.6em;
+  font-size: 0.9em;
+}
+.card-desc {
+  margin: 0.5em 0 0.5em 0;
+  color: var(--color-text, #1f2527);
+  font-size: 1em;
+  min-height: 2.5em;
+}
+.card-address {
+  font-size: 0.95em;
+  color: var(--color-text-muted, #757575);
+  margin-bottom: 0.5em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1em;
+}
+.card-actions {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.5em;
+}
+.btn {
+  display: inline-block;
+  padding: 0.4em 1em;
+  border-radius: 0.5em;
+  font-size: 0.95em;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  background: var(--color-secondary, #e0e2e9);
+  color: var(--color-text, #1f2527);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-primary {
+  background: var(--color-primary, #1e88e5);
+  color: #fff;
+}
+.btn-sm {
+  font-size: 0.9em;
+  padding: 0.3em 0.8em;
+}
+@media (max-width: 600px) {
+  .card.restaurant-card {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .card-img {
+    height: 160px;
+  }
+}
+</style>

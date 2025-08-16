@@ -1,0 +1,125 @@
+---
+export interface Props {
+  // Grid settings
+  gridTemplateColumns?: string;
+  gridTemplateRows?: string;
+  gap?: string;
+
+  // Flex settings
+  flexDirection?: 'row' | 'column';
+
+  // Alignment
+  alignItems?: 'flex-start' | 'center' | 'flex-end' | 'baseline' | 'stretch';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+  alignContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+
+  // Spacing
+  padding?: string;
+  paddingBlock?: string;
+  paddingInline?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
+  paddingRight?: string;
+  margin?: string;
+  marginBlock?: string;
+  marginInline?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  marginLeft?: string;
+  marginRight?: string;
+
+  // Display
+  display?: 'grid' | 'flex';
+
+  // Other settings
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge' | 'inset' | 'outset';
+  backgroundColor?: string;
+  className?: string;
+
+  // HTML native
+  [key: string]: any;
+}
+
+const {
+  display = 'grid',
+  gridTemplateColumns,
+  gridTemplateRows,
+  gap,
+  flexDirection,
+  alignItems,
+  justifyContent,
+  alignContent,
+  padding,
+  paddingBlock,
+  paddingInline,
+  paddingTop,
+  paddingBottom,
+  paddingLeft,
+  paddingRight,
+  margin,
+  marginBlock,
+  marginInline,
+  marginTop,
+  marginBottom,
+  marginLeft,
+  marginRight,
+  border = false,
+  borderColor = 'currentColor',
+  borderWidth = '1px',
+  borderStyle = 'solid',
+  backgroundColor,
+  className = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+// Style complet
+const styles = {
+  display,
+  ...(display === 'grid' && {
+    gridTemplateColumns,
+    gridTemplateRows,
+  }),
+  ...(display === 'flex' && {
+    flexDirection,
+  }),
+  gap,
+  alignItems,
+  justifyContent,
+  alignContent,
+  padding,
+  paddingBlock,
+  paddingInline,
+  paddingTop,
+  paddingBottom,
+  paddingLeft,
+  paddingRight,
+  margin,
+  marginBlock,
+  marginInline,
+  marginTop,
+  marginBottom,
+  marginLeft,
+  marginRight,
+  backgroundColor,
+  ...(border && {
+    border: `${borderWidth} ${borderStyle} ${borderColor}`,
+  }),
+};
+
+// Génération du style inline propre
+const styleString = Object.entries(styles)
+  .filter(([_, value]) => value !== undefined && value !== null && value !== '')
+  .map(([key, value]) => {
+    const kebab = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+    return `${kebab}: ${value}`;
+  })
+  .join('; ');
+---
+
+<div class={className} style={styleString} {...htmlAttributes}>
+  <slot />
+</div>

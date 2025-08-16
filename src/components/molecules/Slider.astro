@@ -1,0 +1,381 @@
+---
+interface Props {
+  preset?: 'default' | 'primary' | 'secondary' | 'accent';
+  className?: string;
+  gap?: string;
+  itemMinWidth?: string;
+  showScrollbar?: boolean;
+  autoScroll?: boolean;
+  scrollSpeed?: number;
+  pauseOnHover?: boolean;
+}
+
+const {
+  preset = 'default',
+  className = '',
+  gap = '1.5rem',
+  itemMinWidth = '280px',
+  showScrollbar = false,
+  autoScroll = false,
+  scrollSpeed = 50,
+  pauseOnHover = true
+} = Astro.props;
+
+// Presets configuration
+const presets = {
+  default: {
+    padding: '1rem',
+    backgroundColor: 'transparent',
+    borderRadius: '0.5rem',
+    shadow: 'none',
+    itemBg: '#ffffff',
+    itemBorder: '1px solid var(--color-border)'
+  },
+  primary: {
+    padding: '1.5rem',
+    backgroundColor: 'var(--color-primary-light)',
+    borderRadius: '0.75rem',
+    shadow: '0 4px 12px rgba(44, 46, 59, 0.1)',
+    itemBg: '#ffffff',
+    itemBorder: '2px solid var(--color-primary)'
+  },
+  secondary: {
+    padding: '1rem',
+    backgroundColor: 'var(--color-secondary-light)',
+    borderRadius: '0.25rem',
+    shadow: '0 2px 8px rgba(224, 226, 233, 0.2)',
+    itemBg: '#ffffff',
+    itemBorder: '1px dashed var(--color-secondary)'
+  },
+  accent: {
+    padding: '1.5rem',
+    backgroundColor: 'var(--color-accent-light)',
+    borderRadius: '1rem',
+    shadow: '0 6px 16px rgba(94, 107, 138, 0.15)',
+    itemBg: '#ffffff',
+    itemBorder: '1px solid var(--color-accent)'
+  }
+};
+
+const currentPreset = presets[preset];
+---
+
+<div
+  class={`slider-wrapper preset-slider-${preset} ${className}`}
+  style={`
+    --slider-gap: ${gap};
+    --slider-item-min-width: ${itemMinWidth};
+    --slider-scroll-speed: ${scrollSpeed}s;
+    ${showScrollbar ? '' : '--slider-scrollbar-display: none;'}
+  `}
+  data-auto-scroll={autoScroll}
+  data-pause-on-hover={pauseOnHover}
+>
+  <div class="slider-container">
+    <ul class="slider-list">
+      <slot />
+    </ul>
+  </div>
+  
+  <div class="slider-controls">
+    <button class="slider-button slider-button--prev" aria-label="Scroll left">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="slider-button slider-button--next" aria-label="Scroll right">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style is:inline>
+  .slider-wrapper {
+    position: relative;
+    padding: var(--preset-padding);
+    background: var(--preset-bg);
+    border-radius: var(--preset-border-radius);
+    box-shadow: var(--preset-shadow);
+    overflow: hidden;
+  }
+
+  .slider-container {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .slider-list {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--slider-gap);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    
+    scrollbar-width: var(--slider-scrollbar-display, none);
+    -ms-overflow-style: var(--slider-scrollbar-display, none);
+  }
+
+  .slider-list::-webkit-scrollbar {
+    display: var(--slider-scrollbar-display, none);
+    height: 8px;
+  }
+
+  .slider-list::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+
+  .slider-list::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .slider-list > * {
+    flex: 0 0 var(--slider-item-min-width);
+    min-width: var(--slider-item-min-width);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    box-sizing: border-box;
+    
+    background: var(--preset-item-bg);
+    border: var(--preset-item-border);
+    border-radius: calc(var(--preset-border-radius) * 0.5);
+    padding: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .slider-list > *:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .slider-controls {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    pointer-events: none;
+  }
+
+  .slider-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    opacity: 0.8;
+  }
+
+  .slider-button:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .slider-button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .slider-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Auto-scroll animation */
+  .slider-wrapper[data-auto-scroll="true"] .slider-list {
+    animation: slider-auto-scroll var(--slider-scroll-speed) linear infinite;
+  }
+
+  .slider-wrapper[data-pause-on-hover="true"]:hover .slider-list {
+    animation-play-state: paused;
+  }
+
+  @keyframes slider-auto-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Preset Styles */
+  .preset-slider-default {
+    --preset-padding: 1rem;
+    --preset-bg: transparent;
+    --preset-border-radius: 0.5rem;
+    --preset-shadow: none;
+    --preset-item-bg: #ffffff;
+    --preset-item-border: 1px solid var(--color-border);
+  }
+
+  .preset-slider-primary {
+    --preset-padding: 1.5rem;
+    --preset-bg: var(--color-primary-light);
+    --preset-border-radius: 0.75rem;
+    --preset-shadow: 0 4px 12px rgba(44, 46, 59, 0.1);
+    --preset-item-bg: #ffffff;
+    --preset-item-border: 2px solid var(--color-primary);
+  }
+
+  .preset-slider-secondary {
+    --preset-padding: 1rem;
+    --preset-bg: var(--color-secondary-light);
+    --preset-border-radius: 0.25rem;
+    --preset-shadow: 0 2px 8px rgba(224, 226, 233, 0.2);
+    --preset-item-bg: #ffffff;
+    --preset-item-border: 1px dashed var(--color-secondary);
+  }
+
+  .preset-slider-accent {
+    --preset-padding: 1.5rem;
+    --preset-bg: var(--color-accent-light);
+    --preset-border-radius: 1rem;
+    --preset-shadow: 0 6px 16px rgba(94, 107, 138, 0.15);
+    --preset-item-bg: #ffffff;
+    --preset-item-border: 1px solid var(--color-accent);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .slider-wrapper {
+      --slider-item-min-width: 250px;
+    }
+
+    .slider-button {
+      width: 36px;
+      height: 36px;
+    }
+
+    .slider-controls {
+      padding: 0 0.25rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .slider-wrapper {
+      --slider-item-min-width: 200px;
+    }
+
+    .slider-button {
+      width: 32px;
+      height: 32px;
+    }
+
+    .preset-slider-primary,
+    .preset-slider-accent {
+      --preset-padding: 1rem;
+    }
+
+    .preset-slider-secondary {
+      --preset-padding: 0.75rem;
+    }
+  }
+</style>
+
+<script is:inline>
+  class SliderComponent {
+    constructor(slider) {
+      this.slider = slider;
+      this.list = slider.querySelector('.slider-list');
+      this.prevButton = slider.querySelector('.slider-button--prev');
+      this.nextButton = slider.querySelector('.slider-button--next');
+      
+      this.scrollAmount = 280; // Default scroll amount
+      
+      this.init();
+    }
+
+    init() {
+      this.bindEvents();
+      this.updateButtons();
+    }
+
+    bindEvents() {
+      if (this.prevButton) {
+        this.prevButton.addEventListener('click', () => this.scrollLeft());
+      }
+      
+      if (this.nextButton) {
+        this.nextButton.addEventListener('click', () => this.scrollRight());
+      }
+
+      // Update button states on scroll
+      this.list.addEventListener('scroll', () => this.updateButtons());
+
+      // Keyboard navigation
+      this.slider.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') this.scrollLeft();
+        if (e.key === 'ArrowRight') this.scrollRight();
+      });
+
+      // Touch/swipe support
+      let startX = 0;
+      let scrollLeft = 0;
+
+      this.list.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].pageX - this.list.offsetLeft;
+        scrollLeft = this.list.scrollLeft;
+      });
+
+      this.list.addEventListener('touchmove', (e) => {
+        if (!startX) return;
+        e.preventDefault();
+        const x = e.touches[0].pageX - this.list.offsetLeft;
+        const walk = (x - startX) * 2;
+        this.list.scrollLeft = scrollLeft - walk;
+      });
+
+      this.list.addEventListener('touchend', () => {
+        startX = 0;
+      });
+    }
+
+    scrollLeft() {
+      this.list.scrollBy({
+        left: -this.scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+
+    scrollRight() {
+      this.list.scrollBy({
+        left: this.scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+
+    updateButtons() {
+      const isAtStart = this.list.scrollLeft <= 0;
+      const isAtEnd = this.list.scrollLeft >= this.list.scrollWidth - this.list.clientWidth - 1;
+
+      if (this.prevButton) {
+        this.prevButton.disabled = isAtStart;
+      }
+      if (this.nextButton) {
+        this.nextButton.disabled = isAtEnd;
+      }
+    }
+  }
+
+  // Initialize all sliders
+  document.addEventListener('DOMContentLoaded', () => {
+    const sliders = document.querySelectorAll('.slider-wrapper');
+    sliders.forEach(slider => new SliderComponent(slider));
+  });
+</script>

@@ -1,0 +1,19 @@
+---
+import Card from '../atoms/Card.astro';
+import { Icon } from 'astro-icon/components';
+
+export interface IconCardProps {
+  title: string;
+  iconName: string; // Nom de l'icône (ex : 'icon-park:aviation')
+  description?: string;
+  iconSize?: number;
+}
+
+const { title, iconName, description, iconSize = 40 } = Astro.props as IconCardProps;
+---
+
+<Card className="bg-white border border-gray-200">
+    <Icon name={iconName} size={iconSize} class="ml-auto mr-auto" />
+      <h3 class="text-xl font-semibold">{title}</h3>
+      {description && <p class="text-gray-600">{description}</p>}
+</Card>

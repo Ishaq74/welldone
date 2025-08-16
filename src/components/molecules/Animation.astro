@@ -1,0 +1,46 @@
+---
+import { twMerge } from 'tailwind-merge';
+
+export interface AnimationProps {
+  animationType?: 'fade-in-from' | 'zoom' | 'rotate';
+  animationDirection?: 'top' | 'bottom' | 'left' | 'right' | 'diagonal-tl' | 'diagonal-tr' | 'diagonal-bl' | 'diagonal-br';
+  duration?: string;
+  delay?: string;
+  easing?: string;
+  triggerOnScroll?: boolean;
+  className?: string;
+  [key: string]: any;
+}
+
+const {
+  animationType = 'fade-in-from',
+  animationDirection = 'bottom',
+  duration = '0.8s',
+  delay,
+  easing = 'ease-out',
+  triggerOnScroll = true,
+  className,
+  ...htmlAttributes
+} = Astro.props as AnimationProps;
+
+const animationClass = `animate-${animationType}-${animationDirection}`;
+const mergedClassList = twMerge(
+  triggerOnScroll ? 'scroll-animate opacity-0' : '',
+  className
+);
+
+const inlineStyle = {
+  animationDuration: duration,
+  animationTimingFunction: easing,
+  ...(delay ? { animationDelay: delay } : {}),
+};
+---
+
+<div 
+  {...htmlAttributes} 
+  class={mergedClassList} 
+  style={inlineStyle} 
+  data-animate={animationClass}
+>
+  <slot />
+</div>

@@ -1,0 +1,349 @@
+---
+interface Props {
+  tag?: 'div' | 'section' | 'article' | 'aside' | 'main' | 'header' | 'footer' | 'nav';
+  preset?: 'default' | 'primary' | 'secondary' | 'accent';
+  display?: 'block' | 'flex' | 'grid' | 'inline-flex' | 'inline-grid';
+  cols?: 1 | 2 | 3 | 4 | 5 | 6 | 'auto-fit' | 'auto-fill';
+  autoFit?: boolean; // Keep for class generation
+  autoFill?: boolean; // Keep for class generation
+  gridTemplateColumns?: string; // Only for custom grid strings, will be inline
+  gap?: string;
+  rowGap?: string;
+  columnGap?: string;
+  flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+  alignItems?: 'flex-start' | 'center' | 'flex-end' | 'baseline' | 'stretch';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+  alignContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'stretch';
+  padding?: string;
+  paddingBlock?: string;
+  paddingInline?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
+  paddingRight?: string;
+  margin?: string;
+  marginBlock?: string;
+  marginInline?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  marginLeft?: string;
+  marginRight?: string;
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: string;
+  textColor?: string;
+  backgroundColor?: string;
+  width?: string;
+  height?: string;
+  maxWidth?: string;
+  minHeight?: string;
+  className?: string; // Pour ajouter des classes personnalisées
+  style?: string; // Pour les overrides CSS inline ultimes
+  [key: string]: any; // Pour permettre toute autre prop HTML standard
+}
+
+// Configuration des presets
+const presets = {
+  default: {
+    padding: '0',
+    backgroundColor: 'transparent',
+    textColor: 'inherit',
+    border: false,
+    borderColor: 'var(--color-border)',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    gap: '1rem'
+  },
+  primary: {
+    padding: '1.5rem',
+    backgroundColor: 'var(--color-primary-light)',
+    textColor: 'var(--color-text-dark)',
+    border: true,
+    borderColor: 'var(--color-primary)',
+    borderWidth: '2px',
+    borderStyle: 'solid',
+    gap: '1.5rem'
+  },
+  secondary: {
+    padding: '1rem',
+    backgroundColor: 'var(--color-secondary-light)',
+    textColor: 'var(--color-text)',
+    border: true,
+    borderColor: 'var(--color-secondary)',
+    borderWidth: '1px',
+    borderStyle: 'dashed',
+    gap: '1rem'
+  },
+  accent: {
+    padding: '1.5rem',
+    backgroundColor: 'var(--color-accent-light)',
+    textColor: 'var(--color-text)',
+    border: false,
+    borderColor: 'var(--color-accent)',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    gap: '1.25rem'
+  }
+};
+
+// Fonctions utilitaires pour mapper les valeurs aux alias de classes CSS
+const remToSpacingAlias = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const remValue = parseFloat(value.replace('rem', ''));
+  switch (remValue) {
+    case 0: return '0';
+    case 0.125: return '0_5'; // 2px
+    case 0.25: return '1';   // 4px
+    case 0.5: return '2';    // 8px
+    case 0.75: return '3';   // 12px
+    case 1: return '4';      // 16px
+    case 1.25: return '5';   // 20px
+    case 1.5: return '6';    // 24px
+    case 2: return '8';      // 32px
+    case 2.5: return '10';   // 40px
+    case 3: return '12';     // 48px
+    case 4: return '16';     // 64px
+    case 5: return '20';     // 80px
+    case 6: return '24';     // 96px
+    case 8: return '32';     // 128px
+    case 10: return '40';    // 160px
+    case 12: return '48';    // 192px
+    case 14: return '56';    // 224px
+    case 16: return '64';    // 256px
+    default: return undefined; // Si la valeur ne correspond pas à une alias connue, ne génère pas de classe spécifique
+  }
+};
+
+const pxToBorderWidthAlias = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const pxValue = parseFloat(value.replace('px', ''));
+  switch (pxValue) {
+    case 0: return '0';
+    case 1: return '1';
+    case 2: return '2';
+    case 3: return '3';
+    case 4: return '4';
+    case 5: return '5';
+    default: return undefined;
+  }
+};
+
+const sizeToAlias = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  switch (value) {
+    case 'auto': return 'auto';
+    case '100%': return 'full';
+    case '100vh': return 'screen';
+    case 'min-content': return 'min';
+    case 'max-content': return 'max';
+    case 'fit-content': return 'fit';
+    default:
+      // Check if it's a rem value that can be mapped to spacing scale
+      const spacingAlias = remToSpacingAlias(value);
+      if (spacingAlias) return spacingAlias;
+      return undefined; // If no standard alias, don't generate a class
+  }
+};
+
+const {
+  tag = 'div',
+  preset = 'default',
+  display = 'block',
+  cols,
+  autoFit = false,
+  autoFill = false,
+  gridTemplateColumns,
+  // Les valeurs des presets sont utilisées comme défauts si les props ne sont pas fournies
+  gap = presets[preset]?.gap || '1rem',
+  rowGap,
+  columnGap,
+  flexDirection,
+  flexWrap,
+  alignItems = 'stretch',
+  justifyContent = 'flex-start',
+  alignContent = 'stretch',
+  padding = presets[preset]?.padding || '0',
+  paddingBlock,
+  paddingInline,
+  paddingTop,
+  paddingBottom,
+  paddingLeft,
+  paddingRight,
+  margin,
+  marginBlock,
+  marginInline,
+  marginTop,
+  marginBottom,
+  marginLeft,
+  marginRight,
+  border = presets[preset]?.border ?? false,
+  borderColor = presets[preset]?.borderColor || 'border', // Changed to 'border' for token
+  borderWidth = presets[preset]?.borderWidth || '1px',
+  borderStyle = presets[preset]?.borderStyle || 'solid',
+  textColor = presets[preset]?.textColor || 'text', // Changed to 'text' for token
+  backgroundColor = presets[preset]?.backgroundColor || 'transparent',
+  width,
+  height,
+  maxWidth,
+  minHeight,
+  className = '',
+  style: inlineStyle = '',
+  ...restProps
+} = Astro.props as Props;
+
+delete restProps.cols;
+
+// Liste des tokens de design
+const designTokens = [
+  'primary', 'secondary', 'accent', 'background', 'text', 'border', 'hover', 'focus',
+  'warning', 'info', 'disabled', 'muted', 'surface', 'shadow', 'shadow-dark',
+  'error', 'success',
+  'primary-light', 'secondary-light', 'accent-light',
+  'primary-dark', 'secondary-dark', 'accent-dark', 'background-dark', 'text-dark',
+  'border-dark', 'hover-dark', 'surface-dark', 'muted-dark'
+];
+
+// Fonction pour convertir un nom de token en variable CSS (non utilisée pour les classes, mais pour les overrides inline ultimes si nécessaire)
+// Pour les classes, on passe directement le nom du token (ex: 'primary') et la classe CSS utilisera `var(--color-primary)`
+function token(val: string | undefined) {
+  return val && designTokens.includes(val) ? `var(--color-${val})` : val;
+}
+
+// Construction des classes CSS. TOUT LE RESTE EST DANS styles.css
+const classes = [
+  'wrapper-component',
+  `preset-wrapper-${preset}`, // Classe pour les styles spécifiques aux presets dans le composant
+  
+  // Display classes
+  display === 'block' ? 'd-block' : '',
+  display === 'flex' ? 'd-flex' : '',
+  display === 'grid' ? 'd-grid' : '',
+  display === 'inline-flex' ? 'd-inline-flex' : '',
+  display === 'inline-grid' ? 'd-inline-grid' : '',
+
+  // Grid column classes (déjà en place via les utilitaires .cols-X, .auto-fit, .auto-fill)
+  cols && typeof cols === 'number' ? `cols-${cols}` : '',
+  autoFit ? 'auto-fit' : '',
+  autoFill ? 'auto-fill' : '',
+
+  // Flexbox classes
+  flexDirection ? `flex-${flexDirection.replace('column', 'col')}` : '', // `column` -> `col`
+  flexWrap ? `flex-${flexWrap}` : '',
+  alignItems ? `items-${alignItems.replace('flex-', '').replace('stretch', 'stretch').replace('baseline', 'baseline')}` : '',
+  justifyContent ? `justify-${justifyContent.replace('flex-', '').replace('space-', 'space-')}` : '',
+  alignContent ? `content-${alignContent.replace('flex-', '').replace('space-', 'space-')}` : '',
+
+  // Gap classes
+  gap ? `gap-${remToSpacingAlias(gap)}` : '',
+  rowGap ? `row-gap-${remToSpacingAlias(rowGap)}` : '',
+  columnGap ? `col-gap-${remToSpacingAlias(columnGap)}` : '',
+
+  // Padding classes
+  padding ? `p-${remToSpacingAlias(padding)}` : '',
+  paddingBlock ? `py-${remToSpacingAlias(paddingBlock)}` : '',
+  paddingInline ? `px-${remToSpacingAlias(paddingInline)}` : '',
+  paddingTop ? `pt-${remToSpacingAlias(paddingTop)}` : '',
+  paddingBottom ? `pb-${remToSpacingAlias(paddingBottom)}` : '',
+  paddingLeft ? `pl-${remToSpacingAlias(paddingLeft)}` : '',
+  paddingRight ? `pr-${remToSpacingAlias(paddingRight)}` : '',
+
+  // Margin classes
+  margin ? `m-${remToSpacingAlias(margin)}` : '',
+  marginBlock ? `my-${remToSpacingAlias(marginBlock)}` : '',
+  marginInline ? `mx-${remToSpacingAlias(marginInline)}` : '',
+  marginTop ? `mt-${remToSpacingAlias(marginTop)}` : '',
+  marginBottom ? `mb-${remToSpacingAlias(marginBottom)}` : '',
+  marginLeft ? `ml-${remToSpacingAlias(marginLeft)}` : '',
+  marginRight ? `mr-${remToSpacingAlias(marginRight)}` : '',
+
+  // Color classes (assumes classes like .text-primary, .bg-accent exist)
+  textColor && designTokens.includes(textColor) ? `text-${textColor}` : '',
+  backgroundColor && designTokens.includes(backgroundColor) ? `bg-${backgroundColor}` : '',
+  
+  // Border classes
+  border ? 'border' : '', // Active la classe de base .border
+  borderWidth ? `border-w-${pxToBorderWidthAlias(borderWidth)}` : '', // Définit la largeur
+  borderStyle ? `border-${borderStyle}` : '', // Définit le style
+  borderColor && designTokens.includes(borderColor) ? `border-${borderColor}` : '', // Définit la couleur
+
+  // Sizing classes (assumes classes like .w-full, .h-screen, .max-w-auto etc. exist)
+  width ? `w-${sizeToAlias(width)}` : '',
+  height ? `h-${sizeToAlias(height)}` : '',
+  maxWidth ? `max-w-${sizeToAlias(maxWidth)}` : '',
+  minHeight ? `min-h-${sizeToAlias(minHeight)}` : '',
+
+  className // Classes supplémentaires passées par l'utilisateur
+].filter(Boolean).join(' ');
+
+// Construction du style inline. TRÈS RÉDUIT.
+const style = [
+  // gridTemplateColumns reste ici seulement si c'est une chaîne personnalisée
+  // et non gérée par les classes .cols-X, .auto-fit, .auto-fill
+  display === 'grid' && gridTemplateColumns && typeof cols !== 'number' && !['auto-fit', 'auto-fill'].includes(cols as string)
+    ? `grid-template-columns: ${gridTemplateColumns};` : '',
+  // Les autres props comme width, height, padding, margin, etc. ne génèrent PLUS de style inline
+  // car elles sont censées être couvertes par les classes CSS.
+  // Si une valeur n'est pas mappable à une classe (ex: width="321px"),
+  // l'utilisateur devra utiliser la prop `style` directement sur le composant.
+  inlineStyle // Inclure le style inline passé directement en prop (override ultime)
+].filter(Boolean).join(' ');
+
+const Tag = tag;
+---
+
+<Tag class={classes} style={style} {...restProps}>
+  <slot />
+</Tag>
+
+<style is:inline>
+  /*
+    CE BLOC CONTIENT UNIQUEMENT LES STYLES SPÉCIFIQUES AUX PRESETS DU COMPOSANT WRAPPER
+    QUI NE PEUVENT PAS ÊTRE GÉRÉS PAR DES CLASSES UTIILITAIRES GLOBALEMENT.
+    TOUT LE RESTE EST DÉSORMAIS DANS styles.css.
+  */
+
+  /* Ajustements responsive du padding pour les presets (pourrait être déplacé dans styles.css si tu veux des classes pour ça) */
+  /* Gardé ici car ce sont des overrides spécifiques des valeurs par défaut des presets, qui n'ont pas forcément d'équivalent utilitaire simple */
+  @media (max-width: 768px) {
+    .preset-wrapper-primary {
+      padding: 1rem !important; /* Ajout de !important pour assurer l'override du preset JS par défaut */
+    }
+    .preset-wrapper-secondary {
+      padding: 0.75rem !important;
+    }
+    .preset-wrapper-accent {
+      padding: 1rem !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .preset-wrapper-primary {
+      padding: 0.75rem !important;
+    }
+    .preset-wrapper-secondary {
+      padding: 0.5rem !important;
+    }
+    .preset-wrapper-accent {
+      padding: 0.75rem !important;
+    }
+  }
+
+  /* Effets hover des presets (spécifiques aux presets, donc restent ici) */
+  .preset-wrapper-primary:hover {
+    background-color: var(--color-primary) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .preset-wrapper-secondary:hover {
+    background-color: var(--color-secondary) !important;
+    border-style: solid !important;
+  }
+
+  .preset-wrapper-accent:hover {
+    background-color: var(--color-accent) !important;
+    transform: translateY(-1px) !important;
+  }
+</style>

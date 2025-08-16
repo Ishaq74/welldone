@@ -1,0 +1,722 @@
+---
+// src/components/Gallery.astro
+
+// Définition des props (sans typage TypeScript explicite pour le JavaScript pur)
+const {
+  images = [], // Tableau d'objets image: [{ src: string, alt?: string, caption?: string, rotation?: number }]
+  preset = 'default', // 'default' | 'slider' | 'carousel' | 'productGallery' | 'photography'
+  className = '', // Classes CSS additionnelles pour le conteneur principal
+  maxImages = images.length, // Nombre maximum d'images à afficher
+  columns = 3, // Nombre de colonnes pour le preset 'default' et 'productGallery' (miniatures)
+  galleryId: userGalleryId, // ID optionnel pour la galerie, généré si non fourni
+  showCaption = true, // Afficher les légendes des images
+  autoScroll = false, // Activer le défilement automatique pour le carrousel
+  autoScrollInterval = 3000, // Intervalle de défilement automatique en ms
+  showButtons = true, // Afficher les boutons Préc/Suiv pour le carrousel
+  showDots = true, // Afficher les points de navigation pour le carrousel
+} = Astro.props;
+
+// Générer un ID unique si non fourni, essentiel pour l'accessibilité et le JS
+const galleryId = userGalleryId || `astro-gallery-${crypto.randomUUID().slice(0, 8)}`;
+
+// Limiter les images affichées selon maxImages
+const displayedImages = images.slice(0, maxImages);
+
+// CSS dynamique pour le carrousel (transform: translateX)
+let dynamicCarouselTransformStyle = '';
+if (preset === 'carousel' && displayedImages.length > 0) {
+  dynamicCarouselTransformStyle = `
+    .gallery-carousel[data-gallery-id="${galleryId}"] .carousel-list {
+      transform: translateX(0%); /* État initial pour le premier élément */
+    }
+    ${displayedImages.map((_: unknown, i: number) => `#${galleryId}-carousel-radio-${i}:checked ~ .carousel-list-wrapper .carousel-list { transform: translateX(-${i * 100}%); }`).join('\n')}
+    ${showDots ? displayedImages.map((_: unknown, i: number) => `#${galleryId}-carousel-radio-${i}:checked ~ .carousel-dots .dot-label[for="${galleryId}-carousel-radio-${i}"] { background-color: var(--gallery-accent-color, #0070f3); transform: scale(1.2); }`).join('\n') : ''}
+  `;
+}
+
+// CSS dynamique pour la mise en évidence de la miniature active dans productGallery
+let dynamicProductGalleryThumbnailStyle = '';
+if (preset === 'productGallery' && displayedImages.length > 0) {
+  dynamicProductGalleryThumbnailStyle = `
+    ${displayedImages.map((_: unknown, i: number) => `#${galleryId}-radio-${i}:checked ~ .main-image-wrapper + .thumbnails .thumbnail-label[for="${galleryId}-radio-${i}"] { border-color: var(--gallery-accent-color, #0070f3); box-shadow: 0 0 0 2px var(--gallery-accent-color, #0070f3); }`).join('\n')}
+  `;
+}
+---
+
+{displayedImages.length > 0 && (
+  <div
+    class:list={["gallery", `gallery-${preset}`, className]}
+    data-gallery-id={galleryId}
+    data-auto-scroll={autoScroll}
+    data-auto-scroll-interval={autoScrollInterval}
+    data-show-buttons={showButtons}
+    data-show-dots={showDots}
+    style={(preset === 'default' || preset === 'productGallery') ? `--gallery-columns: ${columns};` : ''}
+    role="region"
+    aria-labelledby={preset !== 'default' ? `${galleryId}-title` : undefined}
+  >
+    {/* Titre accessible pour les lecteurs d'écran (pour certains presets) */}
+    {preset !== 'default' && (
+      <h2 id={`${galleryId}-title`} class="visually-hidden">
+        Galerie d'images : {preset.charAt(0).toUpperCase() + preset.slice(1).replace(/([A-Z])/g, ' $1')}
+      </h2>
+    )}
+
+    {/* PRÉSET : PRODUCT GALLERY */}
+    {preset === 'productGallery' && (
+      <>
+        <div class="main-image-wrapper">
+          {displayedImages.map(function(image: unknown, i: number) {
+            return (
+              <input
+                type="radio"
+                name={`gallery-radio-${galleryId}`}
+                id={`${galleryId}-radio-${i}`}
+                class="gallery-radio-input"
+                checked={i === 0 ? true : undefined}
+                aria-hidden="true"
+              />
+            );
+          })}
+          {displayedImages.map(function(image: unknown, i: number) {
+            return (
+                <div class={`main-image-item main-image-item-${i}`} data-index={i} role="group" aria-labelledby={`${galleryId}-main-caption-${i}`}>
+                <img src={(image as { src: string; alt?: string; caption?: string; rotation?: number }).src} alt={(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || `Image principale ${i + 1}`} loading="lazy" />
+                {showCaption && (image as { src: string; alt?: string; caption?: string; rotation?: number }).caption && <p class="gallery-caption" id={`${galleryId}-main-caption-${i}`}>{(image as { src: string; alt?: string; caption?: string; rotation?: number }).caption}</p>}
+                </div>
+            );
+          })}
+        </div>
+        <div class="thumbnails" role="tablist" aria-label="Sélectionner une image">
+          {displayedImages.map(function(image: unknown, i: number) {
+            return (
+              <label
+                for={`${galleryId}-radio-${i}`}
+                class="thumbnail-label"
+                tabindex="0"
+                role="tab"
+                aria-selected={i === 0}
+                aria-controls={`main-image-item-${i}`}
+                data-index={i}
+                aria-label={`Aperçu image ${i + 1}: ${(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || ''}`}
+              >
+                <img src={(image as { src: string; alt?: string; caption?: string; rotation?: number }).src} alt={(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || `Aperçu image ${i + 1}`} loading="lazy" />
+                {showCaption && (image as { src: string; alt?: string; caption?: string; rotation?: number }).caption && (
+                  <span class="visually-hidden">{(image as { src: string; alt?: string; caption?: string; rotation?: number }).caption}</span>
+                )}
+              </label>
+            );
+          })}
+        </div>
+      </>
+    )}
+
+    {/* PRÉSET : CAROUSEL */}
+    {preset === 'carousel' && (
+      <>
+        {displayedImages.map(function(image: unknown, i: number) {
+          return (
+            <input
+              type="radio"
+              name={`carousel-radio-${galleryId}`}
+              id={`${galleryId}-carousel-radio-${i}`}
+              class="carousel-radio-input"
+              checked={i === 0 ? true : undefined}
+              aria-hidden="true"
+            />
+          );
+        })}
+        <div class="carousel-list-wrapper">
+          <ul class="carousel-list" role="list"> {/* role="list" pour indiquer que c'est une liste */}
+            {displayedImages.map(function(image: unknown, i: number) {
+              return (
+                <li
+                  class="carousel-item"
+                  role="tabpanel"
+                  aria-labelledby={`${galleryId}-dot-${i}`}
+                >
+                  <img src={(image as { src: string; alt?: string; caption?: string; rotation?: number }).src} alt={(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || `Image ${i + 1} du carrousel`} loading="lazy" />
+                  {showCaption && (image as { src: string; alt?: string; caption?: string; rotation?: number }).caption && <p class="gallery-caption">{(image as { src: string; alt?: string; caption?: string; rotation?: number }).caption}</p>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        {showButtons && displayedImages.length > 1 && (
+          <div class="carousel-buttons">
+            <button class="carousel-button prev-button" aria-label="Image précédente">‹</button>
+            <button class="carousel-button next-button" aria-label="Image suivante">›</button>
+          </div>
+        )}
+        {showDots && displayedImages.length > 1 && (
+          <div class="carousel-dots" role="tablist" aria-label="Naviguer entre les images">
+            {displayedImages.map(function(_: unknown, i: number) {
+              return (
+                <label
+                  for={`${galleryId}-carousel-radio-${i}`}
+                  id={`${galleryId}-dot-${i}`}
+                  class="dot-label"
+                  tabindex="0"
+                  role="tab"
+                  aria-selected={i === 0}
+                  aria-label={`Aller à l'image ${i + 1}`}
+                >
+                  <span class="visually-hidden">Image {i+1}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </>
+    )}
+
+    {/* PRÉSET : SLIDER (Défilement horizontal) */}
+    {preset === 'slider' && (
+      <ul class="slider-list" role="list">
+        {displayedImages.map((image: unknown, i: number) => (
+          <li class="slider-item">
+            <figure role="group" aria-labelledby={`slider-caption-${galleryId}-${i}`} tabindex="0">
+              <img src={(image as { src: string; alt?: string; caption?: string; rotation?: number }).src} alt={(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || `Image ${i + 1} du slider`} loading="lazy" />
+              {showCaption && (image as { src: string; alt?: string; caption?: string; rotation?: number }).caption && <figcaption class="gallery-caption" id={`slider-caption-${galleryId}-${i}`}>{(image as { src: string; alt?: string; caption?: string; rotation?: number }).caption}</figcaption>}
+            </figure>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    {/* PRÉSET : DEFAULT (Grille simple) */}
+    {preset === 'default' && (
+      <>
+        {displayedImages.map((image: unknown, i: number) => (
+          <figure class="default-item" role="group" aria-labelledby={`default-caption-${galleryId}-${i}`} tabindex="0">
+            <img src={(image as { src: string; alt?: string; caption?: string; rotation?: number }).src} alt={(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || `Image ${i + 1} de la grille`} loading="lazy" />
+            {showCaption && (image as { src: string; alt?: string; caption?: string; rotation?: number }).caption && (
+              <figcaption class="gallery-caption" id={`default-caption-${galleryId}-${i}`}>
+                {(image as { src: string; alt?: string; caption?: string; rotation?: number }).caption}
+              </figcaption>
+            )}
+          </figure>
+        ))}
+      </>
+    )}
+
+    {/* PRÉSET : PHOTOGRAPHY (Votre animation CSS) */}
+    {preset === 'photography' && (
+      <div class="gallery-photography-wrapper">
+        {displayedImages.map((image: unknown, i: number) => (
+          <figure
+            class="photography-item"
+            style={`--r: ${(image as { rotation?: number }).rotation !== undefined ? (image as { rotation?: number }).rotation : (i % 2 === 0 ? 7 : -7)}deg; animation-delay: calc(-${i * 0.2}*var(--d));`}
+            role="group"
+            aria-labelledby={`photography-caption-${galleryId}-${i}`}
+          >
+            <img src={(image as { src: string; alt?: string; caption?: string; rotation?: number }).src} alt={(image as { src: string; alt?: string; caption?: string; rotation?: number }).alt || `Photo ${i + 1}`} loading="lazy" />
+            {showCaption && (image as { src: string; alt?: string; caption?: string; rotation?: number }).caption && <figcaption class="gallery-caption" id={`photography-caption-${galleryId}-${i}`}>{(image as { src: string; alt?: string; caption?: string; rotation?: number }).caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+{dynamicCarouselTransformStyle && <style is:inline>{dynamicCarouselTransformStyle}</style>}
+{dynamicProductGalleryThumbnailStyle && <style is:inline>{dynamicProductGalleryThumbnailStyle}</style>}
+
+<style is:inline>
+  /* Styles globaux applicables à toutes les galeries */
+  .gallery {
+    --gallery-gap: 1rem;
+    --gallery-border-radius: 4px;
+    --gallery-accent-color: #0070f3; /* Couleur d'accentuation principale */
+    --gallery-caption-background: rgba(0, 0, 0, 0.7);
+    --gallery-caption-color: white;
+    margin-inline: auto; /* Centrage horizontal */
+    font-family: sans-serif; /* Police par défaut */
+  }
+
+  .gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover; /* Recouvre l'espace disponible */
+    border-radius: var(--gallery-border-radius);
+  }
+
+  .gallery figure,
+  .gallery .slider-item,
+  .gallery .carousel-item {
+    margin: 0;
+    position: relative; /* Base pour le positionnement absolu de la légende */
+  }
+
+  .gallery-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--gallery-caption-background);
+    color: var(--gallery-caption-color);
+    padding: 0.5em;
+    font-size: 0.875rem; /* Taille de police lisible */
+    text-align: center;
+    border-bottom-left-radius: var(--gallery-border-radius);
+    border-bottom-right-radius: var(--gallery-border-radius);
+    /* Assure que la légende ne déborde pas sur les coins arrondis */
+    overflow: hidden;
+  }
+
+  /* Cache visuellement mais reste accessible pour les lecteurs d'écran */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Inputs radio cachés pour le contrôle CSS des galeries interactives */
+  .gallery-radio-input,
+  .carousel-radio-input {
+    display: none;
+  }
+
+  /* --- PRÉSET : DEFAULT (Grille d'images simple) --- */
+  .gallery-default {
+    display: grid;
+    grid-template-columns: repeat(var(--gallery-columns, 3), 1fr);
+    gap: var(--gallery-gap);
+    max-width: 1200px; /* Limite la largeur de la grille */
+  }
+  .gallery-default .default-item img {
+    aspect-ratio: 1 / 1; /* Images carrées par défaut */
+  }
+  .gallery-default .default-item:focus-within { /* Focus sur la figure, pas juste l'image */
+    outline: 2px solid var(--gallery-accent-color);
+    outline-offset: 2px;
+    border-radius: var(--gallery-border-radius);
+  }
+
+  @media (max-width: 768px) {
+    .gallery-default {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    }
+  }
+
+  /* --- PRÉSET : SLIDER (Défilement horizontal) --- */
+  .gallery-slider {
+    padding-block: var(--gallery-gap);
+    max-width: 100vw; /* Peut déborder si nécessaire */
+  }
+  .gallery-slider .slider-list {
+    display: flex;
+    overflow-x: auto; /* Permet le défilement horizontal */
+    scroll-snap-type: x mandatory; /* Assure un arrêt net sur chaque image */
+    gap: var(--gallery-gap);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    scrollbar-width: thin; /* Firefox */
+  }
+  /* Style de la barre de défilement pour Webkit */
+  .gallery-slider .slider-list::-webkit-scrollbar {
+    height: 8px;
+  }
+  .gallery-slider .slider-list::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+  }
+  .gallery-slider .slider-item {
+    flex: 0 0 clamp(60%, 350px, 90%); /* Largeur flexible des items */
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+  .gallery-slider .slider-item img {
+    height: 300px; /* Hauteur fixe pour le slider */
+  }
+  .gallery-slider .slider-item figure:focus-within {
+    outline: 2px solid var(--gallery-accent-color);
+    outline-offset: 2px;
+    border-radius: var(--gallery-border-radius);
+  }
+
+  /* --- PRÉSET : PRODUCT GALLERY --- */
+  .gallery-productGallery {
+    max-width: min(100%, 800px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gallery-gap);
+  }
+  .gallery-productGallery .main-image-wrapper {
+    width: 100%;
+    aspect-ratio: 4 / 3; /* Ratio d'aspect pour l'image principale */
+    border-radius: var(--gallery-border-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  .gallery-productGallery .main-image-item {
+    display: none; /* Cache toutes les images principales par défaut */
+    width: 100%;
+    height: 100%;
+  }
+  .gallery-productGallery .main-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* L'image s'ajuste à l'intérieur */
+  }
+  /* Affiche l'image principale active en fonction de l'input radio coché */
+  .gallery-productGallery input[type="radio"]:checked + .main-image-item {
+    display: block;
+  }
+  .gallery-productGallery .thumbnails {
+    display: grid;
+    grid-template-columns: repeat(var(--gallery-columns, 4), 1fr);
+    gap: calc(var(--gallery-gap) / 2);
+    padding-top: calc(var(--gallery-gap) / 2);
+  }
+  .gallery-productGallery .thumbnail-label {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--gallery-border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent; /* Bordure transparente par défaut */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex; /* Pour que l'image remplisse l'espace */
+  }
+  .gallery-productGallery .thumbnail-label img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .gallery-productGallery .thumbnail-label:hover,
+  .gallery-productGallery .thumbnail-label:focus {
+    outline: none; /* Supprime l'outline par défaut du focus */
+    /* La mise en évidence via CSS dynamique est déjà gérée par dynamicProductGalleryThumbnailStyle */
+  }
+
+  /* --- PRÉSET : CAROUSEL --- */
+  .gallery-carousel {
+    max-width: min(100%, 900px);
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9; /* Ratio standard pour les carrousels */
+  }
+  .gallery-carousel .carousel-list-wrapper {
+    overflow: hidden;
+    height: 100%;
+  }
+  .gallery-carousel .carousel-list {
+    display: flex;
+    padding: 0; margin: 0; list-style: none;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transition avec rebond */
+    height: 100%;
+  }
+  .gallery-carousel .carousel-item {
+    flex: 0 0 100%; /* Chaque item prend 100% de la largeur */
+    min-width: 100%; /* Pour Safari */
+    box-sizing: border-box;
+    position: relative;
+  }
+  .gallery-carousel .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* L'image s'ajuste */
+  }
+  .carousel-dots {
+    position: absolute;
+    bottom: var(--gallery-gap);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: calc(var(--gallery-gap) / 2);
+    z-index: 10;
+    padding: 0.5em; /* Espace autour des points */
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 1em;
+  }
+  .carousel-dots .dot-label {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  .carousel-dots .dot-label:hover {
+    background-color: white;
+  }
+  .carousel-dots .dot-label:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--gallery-accent-color);
+  }
+
+  .carousel-buttons {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 var(--gallery-gap);
+    box-sizing: border-box;
+    z-index: 10;
+  }
+
+  .carousel-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+  }
+
+  .carousel-button:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  .carousel-button:focus-visible {
+    outline: 2px solid var(--gallery-accent-color);
+    outline-offset: 2px;
+  }
+
+  /* --- PRÉSET : PHOTOGRAPHY (Votre animation CSS originale) --- */
+  .gallery-photography {
+    --d: 10s; /* durée de l'animation */
+    display: grid; /* Pour empiler les images sur la même zone de grille */
+    width: 250px; /* Largeur de la zone d'empilement */
+    margin-right: auto;
+    margin-left: auto;
+    margin-block: 2rem;
+    align-items: center;
+    position: relative; /* Pour le z-index et l'animation */
+  }
+
+  .gallery-photography .photography-item {
+    grid-area: 1/1; /* Place toutes les images sur la même cellule de grille */
+    width: 100%;
+    aspect-ratio: 1; /* Assure que les images sont carrées */
+    object-fit: cover;
+    border: 10px solid #f2f2f2;
+    box-shadow: 0 0 4px #0007;
+    z-index: 2; /* Z-index par défaut */
+    animation: slide var(--d) infinite, z-order var(--d) infinite steps(1);
+  }
+
+  .gallery-photography .photography-item:last-child {
+    animation-name: slide, z-order-last;
+  }
+
+  /* Les délais d'animation et rotations sont appliqués via style inline dans le HTML généré */
+  /* Exemple de style inline généré: style="--r: 7deg; animation-delay: calc(-0.2*var(--d));" */
+
+  @keyframes slide {
+    10% {
+      transform: translateX(120%) rotate(var(--r)); /* Sort de l'écran à droite */
+    }
+    0%, 100%, 20% {
+      transform: translateX(0%) rotate(var(--r)); /* Revient en position initiale */
+    }
+  }
+
+  @keyframes z-order {
+    10%, 20% {
+      z-index: 1; /* Passe derrière pendant qu'elle sort */
+    }
+    80% {
+      z-index: 2; /* Repasse devant quand elle revient */
+    }
+  }
+
+  @keyframes z-order-last {
+    10%, 20% {
+      z-index: 1;
+    }
+    90% {
+      z-index: 2;
+    }
+  }
+</style>
+
+<script is:inline>
+  // Ce script s'exécute côté client (hydratation ou chargement initial)
+
+  /**
+   * Configure la logique JavaScript pour le carrousel.
+   * Gère la navigation, l'état des boutons/points et le défilement automatique.
+   * @param {HTMLElement} galleryElement - L'élément DOM de la galerie.
+   */
+  function setupCarousel(galleryElement) {
+    const galleryId = galleryElement.dataset.galleryId;
+    if (!galleryId) return;
+
+    const radios = Array.from(galleryElement.querySelectorAll(`input[name="carousel-radio-${galleryId}"]`));
+    const prevButton = galleryElement.querySelector('.carousel-button.prev-button');
+    const nextButton = galleryElement.querySelector('.carousel-button.next-button');
+    const dots = Array.from(galleryElement.querySelectorAll(`.carousel-dots .dot-label`));
+
+    const autoScroll = galleryElement.dataset.autoScroll === 'true';
+    const autoScrollInterval = parseInt(galleryElement.dataset.autoScrollInterval || '3000', 10);
+    let autoScrollTimer = null;
+    let currentImageIndex = 0; // Garde la trace de l'image actuellement affichée
+
+    // Met à jour le carrousel pour afficher l'image à l'index donné
+    const updateCarousel = (index) => {
+      if (radios[index]) {
+        radios[index].checked = true; // Coche le radio correspondant
+        currentImageIndex = index;
+        updateButtonStates();
+        updateDotAriaSelected();
+      }
+    };
+
+    // Passe à l'image suivante
+    const nextImage = () => {
+      const nextIndex = (currentImageIndex + 1) % radios.length;
+      updateCarousel(nextIndex);
+    };
+
+    // Passe à l'image précédente
+    const prevImage = () => {
+      const prevIndex = (currentImageIndex - 1 + radios.length) % radios.length;
+      updateCarousel(prevIndex);
+    };
+
+    // Démarre le défilement automatique
+    const startAutoScroll = () => {
+      if (autoScroll && radios.length > 1) {
+        if (autoScrollTimer) clearInterval(autoScrollTimer); // S'assure qu'un seul timer est actif
+        autoScrollTimer = setInterval(nextImage, autoScrollInterval);
+      }
+    };
+
+    // Arrête le défilement automatique
+    const stopAutoScroll = () => {
+      if (autoScrollTimer) {
+        clearInterval(autoScrollTimer);
+        autoScrollTimer = null;
+      }
+    };
+
+    // Met à jour l'état des boutons (désactivé si une seule image)
+    const updateButtonStates = () => {
+      if (radios.length <= 1) {
+        if (prevButton) prevButton.disabled = true;
+        if (nextButton) nextButton.disabled = true;
+        return;
+      }
+      if (prevButton) prevButton.disabled = false;
+      if (nextButton) nextButton.disabled = false;
+    };
+
+    // Met à jour les attributs aria-selected et tabindex pour les points de navigation
+    const updateDotAriaSelected = () => {
+      dots.forEach((dot, index) => {
+        const isSelected = index === currentImageIndex;
+        dot.setAttribute('aria-selected', String(isSelected));
+        dot.setAttribute('tabindex', isSelected ? '0' : '-1'); // Seul le point actif est navigable au clavier
+      });
+    };
+
+    // Écouteurs d'événements pour l'interaction utilisateur
+    radios.forEach((radio, index) => {
+      radio.addEventListener('change', () => {
+        if (radio.checked) {
+          currentImageIndex = index;
+          stopAutoScroll(); // Arrête le défilement auto lors d'une interaction manuelle
+          startAutoScroll(); // Redémarre pour une expérience continue
+          updateButtonStates();
+          updateDotAriaSelected();
+        }
+      });
+    });
+
+    if (prevButton) {
+      prevButton.addEventListener('click', () => {
+        prevImage();
+        stopAutoScroll(); // Arrête et redémarre le défilement
+        startAutoScroll();
+      });
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener('click', () => {
+        nextImage();
+        stopAutoScroll(); // Arrête et redémarre le défilement
+        startAutoScroll();
+      });
+    }
+
+    // Initialisation : définit la première image comme active et démarre le défilement
+    updateCarousel(0);
+    startAutoScroll();
+
+    // Pause/Reprise du défilement automatique au survol et au focus pour l'accessibilité
+    galleryElement.addEventListener('mouseenter', stopAutoScroll);
+    galleryElement.addEventListener('focusin', stopAutoScroll);
+    galleryElement.addEventListener('mouseleave', startAutoScroll);
+    galleryElement.addEventListener('focusout', startAutoScroll);
+  }
+
+  /**
+   * Configure la logique JavaScript pour la galerie de produits.
+   * Gère les attributs d'accessibilité pour les miniatures.
+   * @param {HTMLElement} galleryElement - L'élément DOM de la galerie.
+   */
+  function setupProductGallery(galleryElement) {
+    const galleryId = galleryElement.dataset.galleryId;
+    if (!galleryId) return;
+
+    const radios = Array.from(galleryElement.querySelectorAll(`input[name="gallery-radio-${galleryId}"]`));
+    const thumbnails = Array.from(galleryElement.querySelectorAll(`.thumbnails .thumbnail-label`));
+
+    // Met à jour les attributs aria-selected et tabindex pour les miniatures
+    const updateThumbnailAriaSelected = () => {
+      thumbnails.forEach(thumb => {
+        const inputId = thumb.htmlFor;
+        const input = document.getElementById(inputId);
+        const isSelected = input?.checked || false;
+        thumb.setAttribute('aria-selected', String(isSelected));
+        // Seule la miniature active est navigable par Tab
+        thumb.setAttribute('tabindex', isSelected ? '0' : '-1');
+      });
+    };
+
+    // Met à jour les attributs lors du changement de radio (sélection d'image)
+    radios.forEach(radio => {
+      radio.addEventListener('change', updateThumbnailAriaSelected);
+    });
+
+    // Mise à jour initiale au chargement
+    updateThumbnailAriaSelected();
+  }
+
+  // Point d'entrée principal : trouve toutes les galeries et les configure
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.gallery[data-gallery-id]').forEach(galleryElement => {
+      // Détermine le preset basé sur les classes CSS
+      const preset = galleryElement.classList.contains('gallery-carousel') ? 'carousel' :
+                     galleryElement.classList.contains('gallery-productGallery') ? 'productGallery' :
+                     galleryElement.classList.contains('gallery-photography') ? 'photography' :
+                     null; // Pas de JS spécifique pour default/slider/photography
+
+      if (preset === 'carousel') {
+        setupCarousel(galleryElement);
+      } else if (preset === 'productGallery') {
+        setupProductGallery(galleryElement);
+      }
+      // Le preset 'photography' est entièrement en CSS et n'a pas besoin de JS spécifique
+    });
+  });
+</script>

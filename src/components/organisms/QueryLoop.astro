@@ -1,0 +1,176 @@
+---
+
+import { type CollectionEntry, getEntry, getEntries } from 'astro:content';
+import Wrapper from '@atoms/Wrapper2.astro';
+import PostCategoryCard from '@components/cards/PostCategoryCard.astro';
+import PostCard from '@components/cards/PostCard.astro';
+import UserCard from '@components/cards/UserCard.astro';
+
+const CardComponents = {
+  posts: PostCard,
+  postcategories: PostCategoryCard,
+  users: UserCard,
+};
+
+interface Props {
+  entries: CollectionEntry<any>[]; 
+  cardType: keyof typeof CardComponents; 
+  filters?: Record<string, any>;
+  sort?: { field: string; order: 'asc' | 'desc' };
+  limit?: number;
+  references?: string[];
+  categoryFilter?: string | string[];
+  currentId?: string;
+  relatedContent?: boolean;
+  siblingsContent?: boolean;
+  relatedTo?: {
+    collection: string;
+    id: string;
+  };
+  columns?: 1 | 2 | 3 | 4 | 5 | 6;
+}
+
+const {
+  entries: initialEntries = [], // On ajoute un tableau vide par défaut par sécurité
+  cardType,
+  filters = {},
+  sort,
+  limit,
+  references = [],
+  categoryFilter,
+  currentId,
+  relatedContent = false,
+  relatedTo,
+  siblingsContent = false,
+  columns = 3,
+} = Astro.props;
+
+// On s'assure que initialEntries est bien un tableau avant de continuer
+const currentEntry = currentId && Array.isArray(initialEntries) ? initialEntries.find(e => e.id === currentId) : null;
+let processedEntries = Array.isArray(initialEntries) ? [...initialEntries] : [];
+
+function checkCategory(entry: any, categoryFilter: string | string[]) {
+  const dataObject = entry.data.data || entry.data;
+  let entryCategory: string | undefined;
+  if (typeof dataObject.category === 'string') entryCategory = dataObject.category;
+  else if (typeof dataObject.category === 'object' && dataObject.category.id) entryCategory = dataObject.category.id;
+  if (!entryCategory) return false;
+  const categoryArray = Array.isArray(categoryFilter) ? categoryFilter : [categoryFilter];
+  return categoryArray.includes(entryCategory);
+}
+
+// FILTRAGE DES ENTRÉES
+processedEntries = processedEntries.filter(entry => {
+  // --- LA CORRECTION EST ICI ---
+  // Si 'entry' ou 'entry.data' est undefined/null, on l'exclut immédiatement pour éviter le crash.
+  if (!entry || !entry.data) {
+    return false;
+  }
+  // -----------------------------
+
+  // Maintenant, on est sûr que entry.data existe.
+  const dataObject = entry.data.data || entry.data;
+  
+  // Si dataObject est vide ou non un objet, on exclut aussi.
+  if (!dataObject || typeof dataObject !== 'object') {
+      return false;
+  }
+
+  // Le reste de votre logique de filtrage complexe peut maintenant s'exécuter en toute sécurité
+  if (entry.id === currentId) return false;
+
+  if (relatedContent && currentEntry) {
+    const currentData = currentEntry.data.data || currentEntry.data;
+    let currentCategory: string | undefined;
+    if (typeof currentData.category === 'string') currentCategory = currentData.category;
+    else if (typeof currentData.category === 'object' && currentData.category.id) currentCategory = currentData.category.id;
+    if (currentCategory) return checkCategory(entry, currentCategory);
+  }
+
+  if (siblingsContent && currentEntry) {
+    const currentData = currentEntry.data.data || currentEntry.data;
+    let currentCategory: string | undefined;
+    if (typeof currentData.category === 'string') currentCategory = currentData.category;
+    else if (typeof currentData.category === 'object' && currentData.category.id) currentCategory = currentData.category.id;
+    if (currentCategory) return checkCategory(entry, currentCategory);
+  }
+
+  if (categoryFilter) {
+    return checkCategory(entry, categoryFilter);
+  }
+
+  for (let key in filters) {
+    if (filters.hasOwnProperty(key)) {
+      if (dataObject[key] !== filters[key]) return false;
+    }
+  }
+
+  if (relatedTo) {
+    const relatedField = `related${relatedTo.collection.charAt(0).toUpperCase() + relatedTo.collection.slice(1)}`;
+    const relatedItems = dataObject[relatedField];
+    return Array.isArray(relatedItems) && relatedItems.some(item => item.id === relatedTo.id);
+  }
+
+  return true;
+});
+
+// RANDOMISATION
+if (relatedContent) {
+  processedEntries = processedEntries.sort(() => Math.random() - 0.5);
+}
+
+// TRI
+if (sort) {
+  processedEntries.sort((a, b) => {
+    const dataA = a.data.data || a.data;
+    const dataB = b.data.data || b.data;
+    const aValue = dataA[sort.field];
+    const bValue = dataB[sort.field];
+    if (aValue === undefined || bValue === undefined) return 0;
+    return (aValue < bValue ? -1 : 1) * (sort.order === 'asc' ? 1 : -1);
+  });
+}
+
+// LIMITE
+if (limit) {
+  processedEntries = processedEntries.slice(0, limit);
+}
+
+// RÉSOLUTION DES RÉFÉRENCES
+const resolvedEntries = await Promise.all(
+  processedEntries.map(async (entry) => {
+    const resolvedReferences: Record<string, any> = {};
+    for (const ref of references) {
+      const dataObject = entry.data.data || entry.data;
+      const refData = dataObject[ref];
+      if (refData) {
+        try {
+          if (ref === 'author' || ref === 'category') {
+            const refCollectionName = ref === 'author' ? 'users' : 'postcategories';
+            if (Array.isArray(refData)) {
+              // Gérer un tableau de références
+              const refEntries = await getEntries(refData.map(r => ({ collection: r.collection || refCollectionName, id: r.id })));
+              resolvedReferences[ref] = refEntries;
+            } else {
+              // Gérer une référence unique
+              const refEntry = await getEntry(refCollectionName, refData.id || refData);
+              resolvedReferences[ref] = refEntry;
+            }
+          }
+        } catch (error) {
+          console.error(`Error resolving reference ${ref} for entry ${entry.id}:`, error);
+          resolvedReferences[ref] = null;
+        }
+      }
+    }
+    return { ...entry, resolvedReferences };
+  })
+);
+
+const CardComponent = CardComponents[cardType];
+---
+<Wrapper tag="section" display="grid" gap="1rem" cols={columns}>
+  {resolvedEntries.map((entry: any) => (
+    <CardComponent entry={entry} {...entry.resolvedReferences} />
+  ))}
+</Wrapper>

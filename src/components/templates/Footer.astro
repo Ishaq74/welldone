@@ -1,0 +1,45 @@
+---
+import Section from "@atoms/Section.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import List from "@atoms/List.astro";
+
+
+
+const config = {
+  showSocial: true,
+  showNavPrimary: true,
+  showContactInfo: true,
+  showLegalInfo: true,
+  showAddress: true,
+  showGeo: false,
+  showCopyright: true,
+};
+---
+
+<Section as="footer" backgroundColor="accent">
+  <Wrapper display="grid" cols={5}>
+
+
+    {/* Footer minimal strictement conforme au schéma SQL : organizations (name, slug, siret, etc.) */}
+    <div>
+      <Text tag="h4" fontWeight="bold">Plateforme « Salut Annecy »</Text>
+      <List
+        items={[
+          '© ' + new Date().getFullYear() + ' Salut Annecy. Tous droits réservés.',
+          'SIRET : à compléter',
+          'Contact : contact@salutannecy.fr',
+        ]}
+      />
+    </div>
+
+  </Wrapper>
+
+  {config.showCopyright && (
+    <Wrapper display="flex" justifyContent="center">
+      <Text tag="p" fontSize="13px" textAlign="center">
+        © {new Date().getFullYear()} Salut Annecy. Tous droits réservés.
+      </Text>
+    </Wrapper>
+  )}
+</Section>

@@ -1,0 +1,254 @@
+---
+type GridProps = {
+  id?: string;
+  tag?: "div" | "section" | "span" | "nav" | "main" | "header" | "footer" | "article";
+  cols?: string; // nombre ou expression CSS grid-template-columns
+  autoFit?: boolean;
+  autoFill?: boolean;
+  overflowHidden?: boolean;
+
+  gap?: string;
+
+  animate?: string;        // nom animation CSS à appliquer à l’apparition (animation CSS keyframes)
+  hoverAnimate?: string;   // animation CSS sur hover
+  focusAnimate?: string;   // animation CSS sur focus
+  activeAnimate?: string;  // animation CSS sur active
+
+  disabled?: boolean;
+  hidden?: boolean;
+
+  zIndex?: string | number;
+
+  xAlign?:
+    | "left"
+    | "center"
+    | "right"
+    | "space-between"
+    | "space-around"
+    | "space-evenly"
+    | "normal";
+  yAlign?: "top" | "center" | "bottom" | "stretch";
+  align?: "center";
+
+  textAlign?: "left" | "center" | "right";
+
+  yPadding?: string; // padding vertical CSS units
+  xPadding?: string; // padding horizontal CSS units
+
+  xMargin?: string;
+  yMargin?: string;
+
+  customClasses?: string;
+  backgroundColor?: string; // n'importe quelle valeur CSS background-color
+  backgroundImage?: string; // url(...)
+
+  transitionDuration?: string; // ex: "300ms"
+  transitionTiming?: string;   // ex: "ease-in-out"
+
+  border?: boolean;
+  borderType?: "border1" | "border2" | "border3"; // définit largeur border 1px, 2px, 4px
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: string;
+
+  borderRadius?: string;
+  boxShadow?: string;
+
+  hFull?: boolean;  // height: 100%
+  wFull?: boolean;  // width: 100%
+
+  clipPathTop?: string;    // CSS clip-path pour le top
+  clipPathBottom?: string; // CSS clip-path pour le bottom
+};
+
+const {
+  id = "",
+  tag = "section",
+  cols = "",
+  autoFit = false,
+  autoFill = false,
+  overflowHidden = true,
+
+  gap = "1rem",
+
+  animate = "",
+  hoverAnimate = "",
+  focusAnimate = "",
+  activeAnimate = "",
+
+  disabled = false,
+  hidden = false,
+
+  zIndex = "",
+
+  align,
+  xAlign = "normal",
+  yAlign = "top",
+
+  textAlign = "left",
+
+  yPadding = "1rem",
+  xPadding = "1rem",
+
+  xMargin = "0",
+  yMargin = "0",
+
+  customClasses = "",
+  backgroundColor = "transparent",
+  backgroundImage = "",
+
+  transitionDuration = "300ms",
+  transitionTiming = "ease-in-out",
+
+  border = false,
+  borderType = "border1",
+  borderColor = "currentColor",
+  borderWidth = "",
+  borderStyle = "solid",
+
+  borderRadius = "0",
+  boxShadow = "none",
+
+  hFull = false,
+  wFull = true,
+
+  clipPathTop = "none",
+  clipPathBottom = "none",
+}: GridProps = Astro.props;
+
+// Calcul automatique de grid-template-columns
+const gridTemplateCols = autoFit
+  ? "repeat(auto-fit, minmax(250px, 1fr))"
+  : autoFill
+  ? "repeat(auto-fill, minmax(250px, 1fr))"
+  : cols
+  ? isNaN(Number(cols))
+    ? cols
+    : `repeat(${cols}, minmax(0, 1fr))`
+  : "repeat(1, minmax(0, 1fr))";
+
+// Gestion des alignements horizontaux
+const justifyContentMap = {
+  left: "start",
+  center: "center",
+  right: "end",
+  "space-between": "space-between",
+  "space-around": "space-around",
+  "space-evenly": "space-evenly",
+  normal: "normal",
+};
+const justifyContent = align === "center" ? "center" : justifyContentMap[xAlign] || "normal";
+
+// Gestion des alignements verticaux
+const alignItemsMap = {
+  top: "start",
+  center: "center",
+  bottom: "end",
+  stretch: "stretch",
+};
+const alignItems = align === "center" ? "center" : alignItemsMap[yAlign] || "start";
+
+// Gestion overflow
+const overflow = overflowHidden ? "hidden" : "visible";
+
+// Gestion taille
+const width = wFull ? "100%" : "auto";
+const height = hFull ? "100%" : "auto";
+
+// Gestion border selon borderType
+const borderWidthComputed = border
+  ? borderWidth
+    ? borderWidth
+    : borderType === "border1"
+    ? "1px"
+    : borderType === "border2"
+    ? "2px"
+    : borderType === "border3"
+    ? "4px"
+    : "1px"
+  : "0";
+
+// Assemble style objet inline CSS
+const styleObj: Record<string, string | undefined> = {
+  display: "grid",
+  gap,
+  gridTemplateColumns,
+  justifyContent,
+  alignItems,
+  textAlign,
+  paddingTop: yPadding,
+  paddingBottom: yPadding,
+  paddingLeft: xPadding,
+  paddingRight: xPadding,
+  marginTop: yMargin,
+  marginBottom: yMargin,
+  marginLeft: xMargin,
+  marginRight: xMargin,
+  backgroundColor,
+  backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+  border: border ? `${borderWidthComputed} ${borderStyle} ${borderColor}` : undefined,
+  borderRadius,
+  boxShadow,
+  overflow,
+  width,
+  height,
+  zIndex: zIndex ? String(zIndex) : undefined,
+  transitionProperty: "all",
+  transitionDuration,
+  transitionTimingFunction: transitionTiming,
+  clipPath: clipPathTop !== "none" ? clipPathTop : clipPathBottom !== "none" ? clipPathBottom : undefined,
+  pointerEvents: disabled ? "none" : undefined,
+  opacity: disabled ? "0.5" : undefined,
+  userSelect: disabled ? "none" : undefined,
+  visibility: hidden ? "hidden" : undefined,
+};
+
+// Animation management: on inline style via event handlers below
+function setAnimation(el: HTMLElement, animation: string | undefined) {
+  if (!animation) return;
+  el.style.animation = animation;
+}
+function clearAnimation(el: HTMLElement, revertTo = "") {
+  el.style.animation = revertTo;
+}
+
+const Tag = tag;
+---
+
+<style is:inline>
+  /* Animations exemples */
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+</style>
+
+<Tag
+  id={id}
+  class={customClasses}
+  style={styleObj}
+  on:mouseenter={(e) => setAnimation(e.currentTarget, hoverAnimate)}
+  on:mouseleave={(e) => clearAnimation(e.currentTarget, animate)}
+  on:focus={(e) => setAnimation(e.currentTarget, focusAnimate)}
+  on:blur={(e) => clearAnimation(e.currentTarget, animate)}
+  on:mousedown={(e) => setAnimation(e.currentTarget, activeAnimate)}
+  on:mouseup={(e) => clearAnimation(e.currentTarget, animate)}
+  disabled={disabled}
+  aria-hidden={hidden}
+>
+  <slot />
+</Tag>

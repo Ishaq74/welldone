@@ -1,0 +1,75 @@
+---
+import Section from '@atoms/Section.astro';
+import { Icon } from 'astro-icon/components';
+
+// 1. On reçoit l'objet 'entry' complet, comme pour toutes vos cartes.
+const { entry } = Astro.props;
+
+// 2. On extrait l'objet de données de l'utilisateur.
+// C'est ici que se trouvent tous vos champs (nom, job, bio, etc.).
+const user = entry.data.data;
+---
+
+<Section tag="section" xPadding="px-0" yPadding="py-0" gap="gap-0" backgroundColor="bg-white" borderRadius="rounded-lg" shadow="shadow-lg" width="w-full">
+    
+    {/* Avatar de l'utilisateur */}
+    <img
+      class="w-full h-56 object-cover object-center"
+      src={user.avatar || "/images/avatar-john-doe.jpg"}
+      alt={user.alt_avatar || `Avatar de ${user.nom}`}
+    />
+    
+    {/* Bandeau avec le nom */}
+    <div class="flex items-center justify-center content-center py-3 bg-gray-900">
+      {/* Vous pouvez rendre l'icône dynamique si vous le souhaitez */}
+      <Icon name="mdi:account-tie" size={20} class="text-white"/>
+      <h3 class="mx-3 text-white font-bold">{user.nom}</h3>
+    </div>
+    
+    {/* Contenu principal de la carte */}
+    <Section tag="div" xPadding="px-4" yPadding="py-4" gap="gap-2.5" backgroundColor="bg-white" borderRadius="rounded-lg">
+        
+        {/* Job / Titre du poste */}
+        <div class="flex gap-2 items-center">
+            <Icon name="mdi:briefcase" size={20} class="text-gray-700"/>
+            <p class="text-gray-800 font-semibold">{user.job}</p>
+        </div>
+
+        {/* Biographie */}
+        {user.bio && (
+            <p class="py-2 text-gray-600 text-sm">{user.bio}</p>
+        )}
+
+        {/* Rôle */}
+        <div class="flex gap-2 items-center text-gray-700">
+            <Icon name="mdi:shield-account" size={20} class="text-gray-700"/>
+            <p class="text-sm capitalize">{user.role}</p>
+        </div>
+
+        {/* Localisation */}
+        {user.localisation && (
+            <div class="flex gap-2 items-center text-gray-700">
+                <Icon name="mdi:map-marker" size={20} class="text-gray-700"/>
+                <p class="text-sm">{user.localisation}</p>
+            </div>
+        )}
+
+        {/* Liens (si le champ existe dans votre schéma) */}
+        {user.links && Array.isArray(user.links) && user.links.length > 0 && (
+            <div class="flex flex-col gap-1 mt-2">
+                {user.links.map((link) => (
+                    <a href={link} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-blue-600 hover:underline text-sm">
+                        <Icon name="mdi:web" size={20} />
+                        <span>{link}</span>
+                    </a>
+                ))}
+            </div>
+        )}
+
+        {/* Email */}
+        <div class="flex gap-2 items-center mt-2 text-gray-700">
+            <Icon name="mdi:email" size={20} class="text-gray-700"/>
+            <a href={`mailto:${user.email}`} class="text-sm text-blue-600 hover:underline">{user.email}</a>
+        </div>
+    </Section>
+</Section>

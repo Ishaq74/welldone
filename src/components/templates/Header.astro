@@ -1,0 +1,215 @@
+---
+export const prerender = false;
+import Section from "@atoms/Section.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import Icon from "node_modules/astro-icon/components/Icon.astro";
+import NavItem from "@components/navigations/NavItem.astro";
+import Input from "@atoms/Input.astro";
+import Button from "@atoms/Button.astro";
+import Link from "@atoms/Link.astro";
+import { Image } from "astro:assets";
+import AuthModal from "@components/auth/AuthModal.astro";
+import UserMenu from "@components/auth/UserMenu.astro";
+
+const config = {
+  showBrand: true,
+  showNav: true,
+  showSocials: false, // Set to false for now, can be toggled later
+  showSearchBar: false, // Set to false for now, can be toggled later
+  showAuthButtons: true,
+};
+
+// Navigation strictement conforme au PRD/cahier des charges
+const navlinks = [
+  {
+    name: "Découvrir",
+    dropdown: true,
+    children: [
+      { name: "Restaurants", url: "/restaurants" },
+      { name: "Hébergements", url: "/hebergements" },
+      { name: "Activités", url: "/activites" },
+      { name: "Commerces", url: "/commerces" },
+    ],
+  },
+  { name: "Agenda", url: "/agenda" },
+  { name: "Sentiers", url: "/sentiers" },
+  { name: "Magazine", url: "/magazine" },
+  {
+    name: "Communauté",
+    dropdown: true,
+    children: [
+      { name: "Forums", url: "/communaute/forums" },
+      { name: "Groupes", url: "/communaute/groupes" },
+      { name: "Membres", url: "/communaute/membres" },
+      { name: "Annonces Emploi", url: "/communaute/annonces/emploi" },
+      { name: "Annonces Immobilier", url: "/communaute/annonces/immobilier" },
+      { name: "Annonces Ventes", url: "/communaute/annonces/ventes" },
+      { name: "Annonces Services", url: "/communaute/annonces/services" },
+    ],
+  },
+  // Actions utilisateur (à adapter dynamiquement selon auth plus tard)
+  { name: "Proposer", url: "/proposer" },
+];
+const logo = "";
+const logoalt = "Logo de l'entreprise";
+---
+
+<Section as="header" backgroundColor="white" textColor="dark" borderBottom>
+  <Wrapper class="header-grid" style="display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2rem;">
+    {config.showBrand && (
+      <div class="brand" style="display: flex; align-items: center; gap: 0.75rem;">
+        {logo && (
+          <Link href="/" aria-label="Accueil">
+            <Image class="logo" src={logo} alt={logoalt} width={42} height={42} />
+          </Link>
+        )}
+        <Text tag="span" fontSize="1.25rem" fontWeight="bold">Salut Annecy</Text>
+      </div>
+    )}
+    
+    <!-- NAVIGATION -->
+    {config.showNav && navlinks.length > 0 && (
+      <nav class="main-nav" style="justify-self: center;">
+        <ul class="nav-list" role="menubar" aria-label="Main navigation">
+          {navlinks.map(link => (
+            <NavItem {...link} mode="desktop" />
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    <!-- ACTIONS -->
+    <div class="header-actions" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
+      {config.showSearchBar && (
+        <form>
+          <Input type="search" placeholder="Search..." />
+        </form>
+      )}
+
+      {config.showSocials && (
+        <div class="social-icons">
+          <a href="#"><Icon name="mdi:facebook" size={20} /></a>
+          <a href="#"><Icon name="mdi:twitter" size={20} /></a>
+          <a href="#"><Icon name="mdi:linkedin" size={20} /></a>
+        </div>
+      )}
+
+
+      {config.showAuthButtons && (
+        <div class="auth-buttons" style="display: flex; gap: 0.5rem;">
+          <AuthModal />
+          <UserMenu />
+          <button id="open-auth-modal-btn" type="button" class="button primary" style="padding: 0.5rem 1.25rem; border-radius: 1.5rem; font-weight: 500; font-size: 1rem; background: var(--color-primary, #1a237e); color: white; border: none; cursor: pointer; transition: background 0.18s;" aria-haspopup="dialog" aria-controls="auth-modal-overlay">Connexion</button>
+        </div>
+      )}
+
+      <button
+        class="nav-toggle"
+        aria-label="Menu"
+        onclick="document.querySelector('.mobile-nav')?.classList.toggle('open')"
+        style="background: none; border: none; cursor: pointer;"
+      >
+        <Icon name="mdi:menu" size={26} />
+      </button>
+    </div>
+  </Wrapper>
+
+  <!-- MOBILE NAV -->
+  {config.showNav && navlinks.length > 0 && (
+    <Wrapper class="mobile-nav" style="display: none; flex-direction: column; padding: 1rem 0;">
+      <ul style="list-style: none; padding: 0; margin: 0;">
+        {navlinks.map(link => (
+          <NavItem {...link} mode="mobile" />
+        ))}
+      </ul>
+    </Wrapper>
+  )}
+</Section>
+
+<style is:inline>
+.logo {
+  width: 24px;
+  height: 24px;
+}
+.nav-list {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+.social-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+.nav-toggle {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .main-nav,
+  .auth-buttons,
+  .social-icons,
+  form {
+    display: none !important;
+  }
+  .nav-toggle {
+    display: inline-flex !important;
+  }
+  .mobile-nav.open {
+    display: flex !important;
+  }
+}
+@media (min-width: 1024px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
+// ...existing code...
+
+</style>
+
+<script is:inline>
+  // Move modal logic here to ensure global scope
+  let lastActiveElement = null;
+  function openAuthModal() {
+    const overlay = document.getElementById('auth-modal-overlay');
+    overlay.style.display = 'flex';
+    overlay.focus();
+    lastActiveElement = document.activeElement;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      const emailInput = document.getElementById('auth-email');
+      if (emailInput) emailInput.focus();
+    }, 100);
+  }
+  function closeAuthModal() {
+    const overlay = document.getElementById('auth-modal-overlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    if (lastActiveElement) lastActiveElement.focus();
+  }
+  window.openAuthModal = openAuthModal;
+  window.closeAuthModal = closeAuthModal;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('open-auth-modal-btn');
+    if (btn) {
+      btn.addEventListener('click', openAuthModal);
+    }
+    // Modal close button and overlay
+    const closeBtn = document.getElementById('auth-modal-close');
+    const overlay = document.getElementById('auth-modal-overlay');
+    if (closeBtn) closeBtn.addEventListener('click', closeAuthModal);
+    if (overlay) {
+      overlay.addEventListener('mousedown', (e) => {
+        if (e.target === overlay) closeAuthModal();
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      const overlay = document.getElementById('auth-modal-overlay');
+      if (overlay && overlay.style.display === 'flex' && e.key === 'Escape') closeAuthModal();
+    });
+  });
+</script>

@@ -1,0 +1,57 @@
+---
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import Icon from "node_modules/astro-icon/components/Icon.astro";
+import Link from "@atoms/Link.astro";
+import FormattedDate from "@components/FormattedDate.astro";
+import { getEntry } from "astro:content";
+
+const { entry } = Astro.props;
+const { ...entryData } = entry.data;
+const id = entry.slug;
+if (!entry || !entry.data) return null;
+
+
+const categoryEntry = entryData.category ? await getEntry('postcategories', entryData.category) : null;
+const authorEntry = entryData.author ? await getEntry('profiles', entryData.author) : null;
+
+---
+
+<article style="border: 1px solid #ddd; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; background: white;">
+  {entryData.coverImage && (
+    <Link href={`/posts/${entryData.slug}/`}>
+      <img src={entryData.coverImage} alt={entryData.title} width="100%" height="auto" style="display: block; object-fit: cover;" />
+    </Link>
+  )}
+
+  <Wrapper padding="1rem">
+    {categoryEntry && (
+      <Link href={`/post-categories/${categoryEntry.slug}/`} style="font-size: 0.8rem; font-weight: 600; color: #555;">
+        {categoryEntry.data.title}
+      </Link>
+    )}
+
+    <Link href={`/posts/${entryData.slug}/`} style="text-decoration: none;">
+      <Text tag="h2" fontSize="1.25rem" fontWeight="bold" style="margin: 0.5rem 0 0.25rem 0;">{entryData.title}</Text>
+    </Link>
+
+    {entryData.summary && (
+      <Text tag="p" fontSize="0.95rem" color="gray" style="margin-bottom: 0.5rem;">
+        {entryData.summary}
+      </Text>
+    )}
+
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #666;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <Icon name="mdi:clock-outline" size={16} />
+        <FormattedDate date={entryData.updatedDate || entryData.pubDate} />
+      </div>
+      {authorEntry && (
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <img src={authorEntry.data.avatar || '/default-avatar.png'} alt={authorEntry.data.name} width="24" height="24" style="border-radius: 50%;" />
+          <span>{authorEntry.data.name}</span>
+        </div>
+      )}
+    </div>
+  </Wrapper>
+</article>

@@ -1,0 +1,20 @@
+---
+import Card from '../atoms/Card.astro';
+
+export interface ProductProps {
+  title: string;
+  image: string;
+  price: string;
+  description?: string;
+}
+
+const { title, image, price, description } = Astro.props as ProductProps;
+---
+<Card className="bg-white border border-gray-200">
+  <img src={image} alt={title} class="w-full h-48 object-cover rounded-t-lg" />
+  <div class="p-4">
+    <h3 class="text-xl font-semibold">{title}</h3>
+    <p class="text-gray-600">{description}</p>
+    <span class="block mt-2 text-green-500 font-bold">{price}</span>
+  </div>
+</Card>

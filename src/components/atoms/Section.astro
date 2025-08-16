@@ -1,0 +1,233 @@
+---
+interface Props {
+  tag?: 'section' | 'div' | 'article' | 'aside' | 'nav' | 'header' | 'footer' | 'main';
+  preset?: 'default' | 'primary' | 'secondary' | 'accent';
+  alignItems?: 'flex-start' | 'center' | 'flex-end' | 'baseline' | 'stretch';
+  justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+  alignContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+  padding?: string;
+  paddingBlock?: string;
+  paddingInline?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
+  paddingRight?: string;
+  margin?: string;
+  marginBlock?: string;
+  marginInline?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  marginLeft?: string;
+  marginRight?: string;
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge' | 'inset' | 'outset';
+  textColor?: string;
+  backgroundColor?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  width?: string;
+  minHeight?: string;
+  maxWidth?: string;
+  className?: string;
+  [key: string]: any;
+}
+
+const {
+  tag = 'section',
+  preset = 'default',
+  alignItems = 'stretch',
+  justifyContent = 'flex-start',
+  alignContent = 'stretch',
+  padding,
+  paddingBlock,
+  paddingInline,
+  paddingTop,
+  paddingBottom,
+  paddingLeft,
+  paddingRight,
+  margin,
+  marginBlock,
+  marginInline,
+  marginTop,
+  marginBottom,
+  marginLeft,
+  marginRight,
+  border,
+  borderColor,
+  borderWidth,
+  borderStyle,
+  textColor,
+  backgroundColor,
+  textAlign = 'left',
+  width,
+  minHeight,
+  maxWidth,
+  className = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const validTags = ['section', 'div', 'article', 'aside', 'nav', 'header', 'footer', 'main'];
+const SectionTag = validTags.includes(tag) ? tag : 'section';
+
+// Liste complète des tokens design (adaptée à votre liste)
+const designTokens = [
+  'primary', 'secondary', 'accent', 'background', 'text', 'border', 'hover', 'focus',
+  'warning', 'info', 'disabled', 'muted', 'surface', 'shadow', 'shadow-dark',
+  'error', 'success',
+  'primary-light', 'secondary-light', 'accent-light',
+  'primary-dark', 'secondary-dark', 'accent-dark', 'background-dark', 'text-dark',
+  'border-dark', 'hover-dark', 'surface-dark', 'muted-dark'
+];
+
+// Fonction pour détecter si c’est un token design
+function isDesignToken(color: string) {
+  return designTokens.includes(color);
+}
+
+
+// Presets configuration
+const presets = {
+  default: {
+    padding: padding || '1rem',
+    backgroundColor: backgroundColor || 'transparent',
+    textColor: textColor || 'var(--color-text)',
+    border: border ?? false,
+    borderColor: borderColor || 'var(--color-border)',
+    borderWidth: borderWidth || '1px',
+    borderStyle: borderStyle || 'solid'
+  },
+  primary: {
+    padding: padding || '2rem 1rem',
+    backgroundColor: backgroundColor || 'var(--color-primary)',
+    textColor: textColor || 'var(--color-text-dark)',
+    border: border ?? true,
+    borderColor: borderColor || 'var(--color-primary-dark)',
+    borderWidth: borderWidth || '2px',
+    borderStyle: borderStyle || 'solid'
+  },
+  secondary: {
+    padding: padding || '1.5rem 1rem',
+    backgroundColor: backgroundColor || 'var(--color-secondary)',
+    textColor: textColor || 'var(--color-text)',
+    border: border ?? true,
+    borderColor: borderColor || 'var(--color-secondary-dark)',
+    borderWidth: borderWidth || '1px',
+    borderStyle: borderStyle || 'dashed'
+  },
+  accent: {
+    padding: padding || '2rem 1rem',
+    backgroundColor: backgroundColor || 'var(--color-accent)',
+    textColor: textColor || 'var(--color-text-dark)',
+    border: border ?? false,
+    borderColor: borderColor || 'var(--color-accent-dark)',
+    borderWidth: borderWidth || '1px',
+    borderStyle: borderStyle || 'solid'
+  }
+};
+
+const currentPreset = presets[preset] || presets.default;
+
+// Gestion couleur textColor (idem, peut être token ou couleur directe)
+const resolvedTextColor = textColor || currentPreset.textColor;
+const cssTextColor = isDesignToken(resolvedTextColor) ? `var(--color-${resolvedTextColor})` : resolvedTextColor;
+
+// Gestion backgroundColor, appliquer variable CSS si token sinon couleur directe
+const resolvedBackgroundColor = backgroundColor || currentPreset.backgroundColor;
+const cssBackgroundColor = isDesignToken(resolvedBackgroundColor) ? `var(--color-${resolvedBackgroundColor})` : resolvedBackgroundColor;
+
+
+
+const classes = [
+  'section-component',
+  `preset-section-${preset}`,
+  `align-items-${alignItems.replace(' ', '-')}`,
+  `justify-content-${justifyContent.replace(' ', '-')}`,
+  `align-content-${alignContent.replace(' ', '-')}`,
+  `text-align-${textAlign}`,
+  className,
+].filter(Boolean).join(' ');
+
+const style = [
+  `padding: ${paddingTop || currentPreset.padding};`,
+  paddingBlock ? `padding-block: ${paddingBlock};` : '',
+  paddingInline ? `padding-inline: ${paddingInline};` : '',
+  paddingBottom ? `padding-bottom: ${paddingBottom};` : '',
+  paddingLeft ? `padding-left: ${paddingLeft};` : '',
+  paddingRight ? `padding-right: ${paddingRight};` : '',
+  margin ? `margin: ${margin};` : '',
+  marginBlock ? `margin-block: ${marginBlock};` : '',
+  marginInline ? `margin-inline: ${marginInline};` : '',
+  marginTop ? `margin-top: ${marginTop};` : '',
+  marginBottom ? `margin-bottom: ${marginBottom};` : '',
+  marginLeft ? `margin-left: ${marginLeft};` : '',
+  marginRight ? `margin-right: ${marginRight};` : '',
+  `background-color: ${cssBackgroundColor};`,
+  `color: ${cssTextColor};`,
+  currentPreset.border ? `border: ${currentPreset.borderStyle} ${currentPreset.borderWidth} ${currentPreset.borderColor};` : '',
+  width ? `width: ${width};` : '',
+  minHeight ? `min-height: ${minHeight};` : '',
+  maxWidth ? `max-width: ${maxWidth};` : '',
+  `text-align: ${textAlign};`,
+].filter(Boolean).join(' ');
+---
+
+<SectionTag class={classes} style={style} {...htmlAttributes}>
+  <slot />
+</SectionTag>
+
+<style is:inline>
+  /* Responsive padding adjustments */
+  @media (max-width: 768px) {
+    .section-component {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
+    
+    .preset-section-primary {
+      padding: 1.5rem 1rem;
+    }
+    
+    .preset-section-secondary {
+      padding: 1rem;
+    }
+    
+    .preset-section-accent {
+      padding: 1.5rem 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .section-component {
+      padding-left: max(0.75rem, env(safe-area-inset-left));
+      padding-right: max(0.75rem, env(safe-area-inset-right));
+    }
+    
+    .preset-section-primary {
+      padding: 1rem 0.75rem;
+    }
+    
+    .preset-section-secondary {
+      padding: 0.75rem;
+    }
+    
+    .preset-section-accent {
+      padding: 1rem 0.75rem;
+    }
+  }
+
+  /* Preset hover effects */
+  .preset-section-primary:hover {
+    background-color: var(--color-primary-light);
+    transform: translateY(-1px);
+  }
+
+  .preset-section-secondary:hover {
+    background-color: var(--color-secondary-light);
+  }
+
+  .preset-section-accent:hover {
+    background-color: var(--color-accent-light);
+    transform: translateY(-1px);
+  }
+</style>

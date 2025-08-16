@@ -1,0 +1,49 @@
+---
+interface Props {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  action?: string;
+  novalidate?: boolean;
+  autocomplete?: string;
+  className?: string;
+  style?: string;
+  onSubmit?: (event: Event) => void;
+  [key: string]: any;
+}
+
+const {
+  method = 'POST',
+  action = '',
+  novalidate = false,
+  autocomplete = 'on',
+  className = '',
+  style: inlineStyle = '',
+  onSubmit,
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const formClass = ['form-wrapper', className].filter(Boolean).join(' ');
+const formStyle = [inlineStyle].filter(Boolean).join(' ');
+---
+
+<form
+  method={method}
+  action={action}
+  novalidate={novalidate}
+  autocomplete={autocomplete}
+  class={formClass}
+  style={formStyle}
+  on:submit={onSubmit}
+  {...htmlAttributes}
+>
+  <slot />
+</form>
+
+<style is:inline>
+  form.form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2em;
+    font-family: system-ui, sans-serif;
+    max-width: 100%;
+  }
+</style>

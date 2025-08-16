@@ -1,0 +1,160 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  items?: string[] | { icon?: string; text: string }[];
+  ordered?: boolean;
+  icon?: string; // icône globale si item = string ou pas d'icône locale
+  showMarkers?: boolean; // affiche puces ou numéros si true
+  spacing?: string;
+  padding?: string;
+  margin?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  shape?: 'sharp' | 'rounded' | 'circle';
+  shadow?: boolean;
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: string;
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double';
+  textColor?: string;
+  backgroundColor?: string;
+  className?: string;
+  style?: string;
+  [key: string]: any;
+}
+
+const {
+  items = [],
+  ordered = false,
+  icon,
+  showMarkers = true,
+  spacing = '0.5em',
+  padding = '1em',
+  margin,
+  textAlign = 'left',
+  shape = 'sharp',
+  shadow = false,
+  border = false,
+  borderColor = 'border',
+  borderWidth = '1px',
+  borderStyle = 'solid',
+  textColor = 'text',
+  backgroundColor,
+  className = '',
+  style: inlineStyle = '',
+  ...htmlAttributes
+} = Astro.props as Props;
+
+const designTokens = [
+  'primary', 'secondary', 'accent', 'background', 'text', 'border', 'hover', 'focus',
+  'warning', 'info', 'disabled', 'muted', 'surface', 'shadow', 'shadow-dark',
+  'error', 'success',
+  'primary-light', 'secondary-light', 'accent-light',
+  'primary-dark', 'secondary-dark', 'accent-dark', 'background-dark', 'text-dark',
+  'border-dark', 'hover-dark', 'surface-dark', 'muted-dark'
+];
+
+function token(val: string | undefined) {
+  return val && designTokens.includes(val) ? `var(--color-${val})` : val;
+}
+
+const cssTextColor = token(textColor);
+const cssBackgroundColor = token(backgroundColor);
+const cssBorderColor = token(borderColor);
+const Tag = ordered ? 'ol' : 'ul';
+
+const wrapperClass = [
+  'list-wrapper',
+  shape,
+  shadow ? 'shadow' : '',
+  border ? 'border' : '',
+  `text-${textAlign}`,
+  showMarkers ? 'with-markers' : 'no-markers',
+  className
+].filter(Boolean).join(' ');
+
+const wrapperStyle = [
+  cssTextColor ? `color: ${cssTextColor};` : '',
+  cssBackgroundColor ? `background-color: ${cssBackgroundColor};` : '',
+  border ? `border: ${borderWidth} ${borderStyle} ${cssBorderColor};` : '',
+  padding ? `padding: ${padding};` : '',
+  margin ? `margin: ${margin};` : '',
+  inlineStyle
+].filter(Boolean).join('');
+---
+
+<Tag class={wrapperClass} style={wrapperStyle} {...htmlAttributes}>
+  {items.map((item) => {
+    const content = typeof item === 'string' ? item : item.text;
+    const itemIcon = typeof item === 'string' ? icon : item.icon ?? icon;
+    return (
+      <li class="list-item" style={`gap: ${spacing};`}>
+        {itemIcon && <Icon name={itemIcon} />}
+        <span>{content}</span>
+      </li>
+    );
+  })}
+  <slot />
+</Tag>
+
+<style is:inline>
+  .list-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    transition: all 0.3s ease;
+  }
+
+  .list-wrapper.no-markers {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .list-wrapper.with-markers {
+    list-style-position: inside;
+  }
+
+  .list-wrapper.sharp {
+    border-radius: 0;
+  }
+
+  .list-wrapper.rounded {
+    border-radius: 0.5rem;
+  }
+
+  .list-wrapper.circle {
+    border-radius: 50rem;
+  }
+
+  .list-wrapper.shadow {
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .list-wrapper.border {
+    border-style: solid;
+  }
+
+  .list-wrapper.text-left {
+    text-align: left;
+  }
+
+  .list-wrapper.text-center {
+    text-align: center;
+  }
+
+  .list-wrapper.text-right {
+    text-align: right;
+  }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    line-height: 1.4;
+  }
+
+  .list-item svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+</style>
